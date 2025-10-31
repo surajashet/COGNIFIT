@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health & Wellness Blogs</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================== */
+        /* GLOBAL VARIABLES & RESET */
+        /* ============================================== */
+        :root {
+            --primary-color: #abc85f;
+            --secondary-color: #AE523A;
+            --accent-color: #6A8CAF;
+            --accent-purple: #9B5DE5;
+            --accent-pink: #F15BB5;
+            --accent-yellow: #FEE440;
+            --text-dark: #2c2c2c;
+            --text-light: #fff;
+            --bg-light: #f7f7f7;
+            --bg-gray: #f0f0f0;
+            --card-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            --hover-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+            --border-radius: 12px;
+            --font-family: 'Poppins', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            color: var(--text-dark);
+            line-height: 1.5;
+            background-color: var(--bg-light);
+            min-height: 100vh;
+            font-size: 14px;
+        }
+
+        /* ============================================== */
+        /* DASHBOARD LAYOUT */
+        /* ============================================== */
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            grid-template-rows: 60px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .dashboard-header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .logo i {
+            margin-right: 8px;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            font-size: 14px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background-color: var(--text-light);
+            padding: 20px 0;
+            box-shadow: var(--card-shadow);
+            z-index: 90;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--text-dark);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: rgba(171, 200, 95, 0.15);
+            color: var(--primary-color);
+            border-right: 3px solid var(--primary-color);
+        }
+
+        .nav-item i {
+            margin-right: 12px;
+            width: 18px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        /* Main Content */
+        .dashboard-content {
+            padding: 20px;
+            background-color: var(--bg-light);
+            overflow-y: auto;
+        }
+
+        /* Blogs Page Specific Styles */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-dark);
+            position: relative;
+            padding-bottom: 8px;
+        }
+
+        .page-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 3px;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            padding: 10px 15px 10px 40px;
+            border-radius: 50px;
+            border: 1px solid #ddd;
+            font-family: var(--font-family);
+            font-size: 14px;
+            width: 250px;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(171, 200, 95, 0.2);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+        }
+
+        /* Admin Button */
+        .admin-btn {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-family: var(--font-family);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 15px;
+        }
+
+        .admin-btn:hover {
+            background: #8c3c2a;
+            transform: translateY(-2px);
+        }
+
+        /* Featured Blog */
+        .featured-blog {
+            background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-pink) 100%);
+            color: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            margin-bottom: 30px;
+            box-shadow: var(--card-shadow);
+            position: relative;
+            height: 350px;
+            display: flex;
+            align-items: flex-end;
+            cursor: pointer;
+        }
+
+        .featured-content {
+            padding: 30px;
+            position: relative;
+            z-index: 2;
+            width: 60%;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+        }
+
+        .featured-tag {
+            display: inline-block;
+            background-color: var(--accent-yellow);
+            color: var(--text-dark);
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .featured-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }
+
+        .featured-excerpt {
+            font-size: 16px;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .featured-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .featured-image {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 45%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+        }
+
+        /* Blogs Grid */
+        .blogs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .blog-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .blog-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .blog-image {
+            height: 180px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .blog-category {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background-color: white;
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .blog-content {
+            padding: 20px;
+        }
+
+        .blog-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+
+        .blog-excerpt {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .blog-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .blog-author {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .author-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        /* No Blogs Message */
+        .no-blogs {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .no-blogs i {
+            font-size: 4rem;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+
+        .no-blogs h3 {
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+
+        /* Blog Modal */
+        .blog-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background-color: white;
+            max-width: 800px;
+            margin: 40px auto;
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .modal-header {
+            padding: 25px 30px 15px;
+            border-bottom: 1px solid #eee;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #888;
+            transition: color 0.2s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--secondary-color);
+        }
+
+        .modal-category {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .modal-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            line-height: 1.3;
+        }
+
+        .modal-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .modal-body {
+            padding: 25px 30px;
+        }
+
+        .modal-image {
+            width: 100%;
+            height: 300px;
+            background-size: cover;
+            background-position: center;
+            margin-bottom: 25px;
+            border-radius: 8px;
+        }
+
+        .modal-text {
+            font-size: 16px;
+            line-height: 1.7;
+            color: #444;
+        }
+
+        .modal-text p {
+            margin-bottom: 20px;
+        }
+
+        .modal-text h3 {
+            font-size: 22px;
+            margin: 30px 0 15px;
+            color: var(--text-dark);
+        }
+
+        .modal-text ul, .modal-text ol {
+            margin-left: 20px;
+            margin-bottom: 20px;
+        }
+
+        .modal-text li {
+            margin-bottom: 8px;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .loading i {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+            
+            .featured-blog {
+                height: auto;
+                flex-direction: column;
+            }
+            
+            .featured-content {
+                width: 100%;
+            }
+            
+            .featured-image {
+                position: relative;
+                width: 100%;
+                height: 200px;
+                border-radius: 0 0 var(--border-radius) var(--border-radius);
+            }
+            
+            .blogs-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .search-box input {
+                width: 100%;
+            }
+            
+            .blogs-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal-content {
+                margin: 20px auto;
+            }
+            
+            .modal-header, .modal-body {
+                padding: 20px;
+            }
+        }
+
+        /* Animation classes */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="logo">
+                <i class="fas fa-leaf"></i>
+                <span>Blogs</span>
+            </div>
+            
+            <div class="user-menu">
+                <a href="{{ url_for('admin_blogs') }}" class="admin-btn">
+                    <i class="fas fa-plus"></i>
+                    Manage Blogs
+                </a>
+                <div class="user-profile">
+                    <div class="avatar">{{ user_name[0]|upper if user_name else 'U' }}</div>
+                    <span>{{ user_name or 'User' }}</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <a href="{{ url_for('dashboard') }}" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Progress</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-utensils"></i>
+                <span>Recipes</span>
+            </a>
+            <a href="{{ url_for('cycle_form') }}" class="nav-item">
+                <i class="fas fa-female"></i>
+                <span>Cycle Tracking</span>
+            </a>
+            <a href="{{ url_for('blogs') }}" class="nav-item active">
+                <i class="fas fa-newspaper"></i>
+                <span>Blogs</span>
+            </a>
+            <a href="{{ url_for('calendar') }}" class="nav-item">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Calendar</span>
+            </a>
+            <a href="#" class="nav-item" onclick="alert('Snap feature coming soon!')">
+                <i class="fas fa-camera"></i>
+                <span>Snap</span>
+            </a>
+            <a href="{{ url_for('settings') }}" class="nav-item">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+            <a href="{{ url_for('logout') }}" class="nav-item">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="dashboard-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1 class="page-title">Health & Wellness Blogs</h1>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search blogs..." id="searchInput">
+                </div>
+            </div>
+
+            <!-- Featured Blog -->
+            {% if featured_blog %}
+            <div class="featured-blog fade-in" data-blog-id="{{ featured_blog.id }}">
+                <div class="featured-content">
+                    <span class="featured-tag">FEATURED</span>
+                    <h2 class="featured-title">{{ featured_blog.title }}</h2>
+                    <p class="featured-excerpt">{{ featured_blog.excerpt or 'Read this featured blog post about health and wellness.' }}</p>
+                    <div class="featured-meta">
+                        <span><i class="far fa-user"></i> {{ featured_blog.author }}</span>
+                        <span><i class="far fa-clock"></i> {{ featured_blog.read_time }}</span>
+                        <span><i class="far fa-calendar"></i> {{ featured_blog.created_at.strftime('%b %d, %Y') if featured_blog.created_at else 'Recent' }}</span>
+                    </div>
+                </div>
+                <div class="featured-image" style="background-image: url('{{ featured_blog.image_url or 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' }}')"></div>
+            </div>
+            {% endif %}
+
+            <!-- Blogs Grid -->
+            <div class="blogs-grid" id="blogsContainer">
+                {% if blogs %}
+                    {% for blog in blogs %}
+                    <div class="blog-card fade-in" data-blog-id="{{ blog.id }}">
+                        <div class="blog-image" style="background-image: url('{{ blog.image_url or 'https://images.unsplash.com/photo-1494390248081-4e521a5940db?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' }}');">
+                            <span class="blog-category" style="background-color: {{ blog.category_color or '#abc85f' }}; color: white;">{{ blog.category }}</span>
+                        </div>
+                        <div class="blog-content">
+                            <h3 class="blog-title">{{ blog.title }}</h3>
+                            <p class="blog-excerpt">{{ blog.excerpt or 'Read this informative blog post about health and wellness.' }}</p>
+                            <div class="blog-meta">
+                                <div class="blog-author">
+                                    <div class="author-avatar">{{ blog.author[0:2]|upper }}</div>
+                                    <span>{{ blog.author }}</span>
+                                </div>
+                                <span>{{ blog.read_time }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-blogs">
+                        <i class="fas fa-newspaper"></i>
+                        <h3>No Blogs Available</h3>
+                        <p>Check back later for new health and wellness content, or create some blogs in the admin panel.</p>
+                        <a href="{{ url_for('admin_blogs') }}" class="admin-btn" style="margin-top: 20px;">
+                            <i class="fas fa-plus"></i>
+                            Create First Blog
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Blog Modal -->
+    <div class="blog-modal" id="blogModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="modal-close" id="modalClose">&times;</button>
+                <span class="modal-category" id="modalCategory">Nutrition</span>
+                <h2 class="modal-title" id="modalTitle">Blog Title</h2>
+                <div class="modal-meta" id="modalMeta">
+                    <span><i class="far fa-user"></i> Author Name</span>
+                    <span><i class="far fa-clock"></i> 5 min read</span>
+                    <span><i class="far fa-calendar"></i> Sep 15, 2025</span>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="modal-image" id="modalImage"></div>
+                <div class="modal-text" id="modalText">
+                    <!-- Blog content will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const blogModal = document.getElementById('blogModal');
+            const modalClose = document.getElementById('modalClose');
+            const modalCategory = document.getElementById('modalCategory');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMeta = document.getElementById('modalMeta');
+            const modalImage = document.getElementById('modalImage');
+            const modalText = document.getElementById('modalText');
+            const blogCards = document.querySelectorAll('.blog-card');
+            const featuredBlog = document.querySelector('.featured-blog');
+            const searchInput = document.getElementById('searchInput');
+
+            // Fade-in animation on scroll
+            const fadeElements = document.querySelectorAll('.fade-in');
+            
+            const fadeInOnScroll = function() {
+                fadeElements.forEach(element => {
+                    const elementTop = element.getBoundingClientRect().top;
+                    const elementVisible = 150;
+                    
+                    if (elementTop < window.innerHeight - elementVisible) {
+                        element.classList.add('visible');
+                    }
+                });
+            };
+            
+            // Check on load
+            fadeInOnScroll();
+            
+            // Check on scroll
+            window.addEventListener('scroll', fadeInOnScroll);
+
+            // Open blog modal
+            async function openBlogModal(blogId) {
+                try {
+                    const response = await fetch(`/get_blog/${blogId}`);
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        const blog = result.blog;
+                        modalCategory.textContent = blog.category;
+                        modalCategory.style.backgroundColor = blog.category_color;
+                        modalTitle.textContent = blog.title;
+                        modalMeta.innerHTML = `
+                            <span><i class="far fa-user"></i> ${blog.author}</span>
+                            <span><i class="far fa-clock"></i> ${blog.read_time}</span>
+                            <span><i class="far fa-calendar"></i> ${blog.created_at}</span>
+                        `;
+                        modalImage.style.backgroundImage = `url('${blog.image_url || 'https://images.unsplash.com/photo-1494390248081-4e521a5940db?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}')`;
+                        modalText.innerHTML = blog.content;
+                        
+                        blogModal.style.display = 'block';
+                        document.body.style.overflow = 'hidden';
+                    } else {
+                        alert('Error loading blog: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Error fetching blog:', error);
+                    alert('Error loading blog. Please try again.');
+                }
+            }
+
+            // Close modal
+            function closeModal() {
+                blogModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+
+            // Blog card interactions
+            blogCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    const blogId = this.getAttribute('data-blog-id');
+                    openBlogModal(blogId);
+                });
+            });
+
+            // Featured blog interaction
+            if (featuredBlog) {
+                featuredBlog.addEventListener('click', function() {
+                    const blogId = this.getAttribute('data-blog-id');
+                    openBlogModal(blogId);
+                });
+            }
+
+            // Modal close button
+            modalClose.addEventListener('click', closeModal);
+
+            // Close modal when clicking outside content
+            blogModal.addEventListener('click', function(e) {
+                if (e.target === blogModal) {
+                    closeModal();
+                }
+            });
+
+            // Close modal with Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeModal();
+                }
+            });
+
+            // Search functionality
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const blogCards = document.querySelectorAll('.blog-card');
+                
+                blogCards.forEach(card => {
+                    const title = card.querySelector('.blog-title').textContent.toLowerCase();
+                    const excerpt = card.querySelector('.blog-excerpt').textContent.toLowerCase();
+                    const category = card.querySelector('.blog-category').textContent.toLowerCase();
+                    
+                    if (title.includes(searchTerm) || excerpt.includes(searchTerm) || category.includes(searchTerm)) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

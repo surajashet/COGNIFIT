@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthy Indian Recipes</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================== */
+        /* GLOBAL VARIABLES & RESET */
+        /* ============================================== */
+        :root {
+            --primary-color: #abc85f;
+            --secondary-color: #a3391a;
+            --accent-color: #6A8CAF;
+            --text-dark: #2c2c2c;
+            --text-light: #fff;
+            --bg-light: #f7f7f7;
+            --bg-gray: #f0f0f0;
+            --card-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            --hover-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+            --border-radius: 12px;
+            --font-family: 'Poppins', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            color: var(--text-dark);
+            line-height: 1.5;
+            background-color: var(--bg-light);
+            min-height: 100vh;
+            font-size: 14px;
+        }
+
+        /* ============================================== */
+        /* DASHBOARD LAYOUT */
+        /* ============================================== */
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            grid-template-rows: 60px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .dashboard-header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .logo i {
+            margin-right: 8px;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            font-size: 14px;
+        }
+
+        /* Admin Button */
+        .admin-btn {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-family: var(--font-family);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 15px;
+            text-decoration: none;
+        }
+
+        .admin-btn:hover {
+            background: #8c3c2a;
+            transform: translateY(-2px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background-color: var(--text-light);
+            padding: 20px 0;
+            box-shadow: var(--card-shadow);
+            z-index: 90;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--text-dark);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: rgba(171, 200, 95, 0.15);
+            color: var(--primary-color);
+            border-right: 3px solid var(--primary-color);
+        }
+
+        .nav-item i {
+            margin-right: 12px;
+            width: 18px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        /* Main Content */
+        .dashboard-content {
+            padding: 20px;
+            background-color: var(--bg-light);
+            overflow-y: auto;
+        }
+
+        /* Recipes Page Specific Styles */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-dark);
+            position: relative;
+            padding-bottom: 8px;
+        }
+
+        .page-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 3px;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            padding: 10px 15px 10px 40px;
+            border-radius: 50px;
+            border: 1px solid #ddd;
+            font-family: var(--font-family);
+            font-size: 14px;
+            width: 250px;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(171, 200, 95, 0.2);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+        }
+
+        /* Recipe Categories */
+        .categories {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .category-btn {
+            padding: 8px 16px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 50px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .category-btn:hover, .category-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* Featured Recipe */
+        .featured-recipe {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            margin-bottom: 30px;
+            box-shadow: var(--card-shadow);
+            position: relative;
+            height: 350px;
+            display: flex;
+            align-items: flex-end;
+            cursor: pointer;
+        }
+
+        .featured-content {
+            padding: 30px;
+            position: relative;
+            z-index: 2;
+            width: 60%;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+        }
+
+        .featured-tag {
+            display: inline-block;
+            background-color: var(--accent-color);
+            color: var(--text-light);
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .featured-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }
+
+        .featured-excerpt {
+            font-size: 16px;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .featured-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .featured-image {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 45%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+        }
+
+        /* Recipes Grid */
+        .recipes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .recipe-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .recipe-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .recipe-image {
+            height: 180px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .recipe-category {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .recipe-content {
+            padding: 20px;
+        }
+
+        .recipe-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+
+        .recipe-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 15px;
+        }
+
+        .recipe-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .recipe-tag {
+            background-color: rgba(171, 200, 95, 0.2);
+            color: var(--primary-color);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        /* No Recipes Message */
+        .no-recipes {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .no-recipes i {
+            font-size: 4rem;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+
+        .no-recipes h3 {
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+
+        /* Recipe Modal */
+        .recipe-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background-color: white;
+            max-width: 800px;
+            margin: 40px auto;
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .modal-header {
+            padding: 25px 30px 15px;
+            border-bottom: 1px solid #eee;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #888;
+            transition: color 0.2s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--secondary-color);
+        }
+
+        .modal-category {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .modal-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            line-height: 1.3;
+        }
+
+        .modal-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .modal-body {
+            padding: 25px 30px;
+        }
+
+        .modal-image {
+            width: 100%;
+            height: 300px;
+            background-size: cover;
+            background-position: center;
+            margin-bottom: 25px;
+            border-radius: 8px;
+        }
+
+        .recipe-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+            padding: 15px;
+            background-color: rgba(171, 200, 95, 0.1);
+            border-radius: 8px;
+        }
+
+        .detail-item {
+            text-align: center;
+        }
+
+        .detail-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .ingredients-section, .instructions-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--text-dark);
+            position: relative;
+            padding-bottom: 8px;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 2px;
+            background-color: var(--primary-color);
+        }
+
+        .ingredients-list, .instructions-list {
+            list-style-type: none;
+        }
+
+        .ingredients-list li, .instructions-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .instructions-list li {
+            margin-bottom: 15px;
+            border-bottom: none;
+        }
+
+        .step-number {
+            background-color: var(--primary-color);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 12px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+            
+            .featured-recipe {
+                height: auto;
+                flex-direction: column;
+            }
+            
+            .featured-content {
+                width: 100%;
+            }
+            
+            .featured-image {
+                position: relative;
+                width: 100%;
+                height: 200px;
+                border-radius: 0 0 var(--border-radius) var(--border-radius);
+            }
+            
+            .recipes-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .search-box input {
+                width: 100%;
+            }
+            
+            .recipes-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal-content {
+                margin: 20px auto;
+            }
+            
+            .modal-header, .modal-body {
+                padding: 20px;
+            }
+        }
+
+        /* Animation classes */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="logo">
+                <i class="fas fa-utensils"></i>
+                <span>Healthy Indian Recipes</span>
+            </div>
+            
+            <div class="user-menu">
+                <a href="{{ url_for('admin_recipes') }}" class="admin-btn">
+                    <i class="fas fa-plus"></i>
+                    Manage Recipes
+                </a>
+                <div class="user-profile">
+                    <div class="avatar">{{ user_name[0]|upper if user_name else 'U' }}</div>
+                    <span>{{ user_name or 'User' }}</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <a href="{{ url_for('dashboard') }}" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Progress</span>
+            </a>
+            <a href="{{ url_for('recipes') }}" class="nav-item active">
+                <i class="fas fa-utensils"></i>
+                <span>Recipes</span>
+            </a>
+            <a href="{{ url_for('cycle_form') }}" class="nav-item">
+                <i class="fas fa-female"></i>
+                <span>Cycle Tracking</span>
+            </a>
+            <a href="{{ url_for('blogs') }}" class="nav-item">
+                <i class="fas fa-newspaper"></i>
+                <span>Blogs</span>
+            </a>
+            <a href="{{ url_for('calendar') }}" class="nav-item">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Calendar</span>
+            </a>
+            <a href="#" class="nav-item" onclick="alert('Snap feature coming soon!')">
+                <i class="fas fa-camera"></i>
+                <span>Snap</span>
+            </a>
+            <a href="{{ url_for('settings') }}" class="nav-item">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+            <a href="{{ url_for('logout') }}" class="nav-item">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="dashboard-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1 class="page-title">Healthy Indian Recipes</h1>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search recipes..." id="searchInput">
+                </div>
+            </div>
+
+            <!-- Recipe Categories -->
+            <div class="categories">
+                <button class="category-btn active">All</button>
+                <button class="category-btn">Main Course</button>
+                <button class="category-btn">Soup</button>
+                <button class="category-btn">Salad</button>
+                <button class="category-btn">Breakfast</button>
+                <button class="category-btn">Snack</button>
+                <button class="category-btn">Dessert</button>
+                <button class="category-btn">Drink</button>
+            </div>
+
+            <!-- Featured Recipe -->
+            {% if featured_recipe %}
+            <div class="featured-recipe fade-in" data-recipe-id="{{ featured_recipe.id }}">
+                <div class="featured-content">
+                    <span class="featured-tag">FEATURED</span>
+                    <h2 class="featured-title">{{ featured_recipe.title }}</h2>
+                    <p class="featured-excerpt">A delicious and healthy {{ featured_recipe.category|lower }} recipe that's perfect for your wellness journey.</p>
+                    <div class="featured-meta">
+                        <span><i class="far fa-clock"></i> {{ featured_recipe.total_time }}</span>
+                        <span><i class="fas fa-fire"></i> {{ featured_recipe.calories }}</span>
+                        <span><i class="fas fa-user-friends"></i> {{ featured_recipe.servings }}</span>
+                        <span><i class="far fa-calendar"></i> {{ featured_recipe.created_at.strftime('%b %d, %Y') if featured_recipe.created_at else 'Recent' }}</span>
+                    </div>
+                </div>
+                <div class="featured-image" style="background-image: url('{{ featured_recipe.image_url or 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' }}')"></div>
+            </div>
+            {% endif %}
+
+            <!-- Recipes Grid -->
+            <div class="recipes-grid" id="recipesContainer">
+                {% if recipes %}
+                    {% for recipe in recipes %}
+                    <div class="recipe-card fade-in" data-recipe-id="{{ recipe.id }}">
+                        <div class="recipe-image" style="background-image: url('{{ recipe.image_url or 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' }}');">
+                            <span class="recipe-category">{{ recipe.category }}</span>
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">{{ recipe.title }}</h3>
+                            <div class="recipe-meta">
+                                <span><i class="far fa-clock"></i> {{ recipe.total_time }}</span>
+                                <span><i class="fas fa-fire"></i> {{ recipe.calories }}</span>
+                                <span><i class="fas fa-user-friends"></i> {{ recipe.servings }}</span>
+                            </div>
+                            <div class="recipe-tags">
+                                {% if recipe.tags %}
+                                    {% for tag in recipe.tags.split(',') %}
+                                        <span class="recipe-tag">{{ tag.strip() }}</span>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-recipes">
+                        <i class="fas fa-utensils"></i>
+                        <h3>No Recipes Available</h3>
+                        <p>Check back later for new healthy recipes, or create some recipes in the admin panel.</p>
+                        <a href="{{ url_for('admin_recipes') }}" class="admin-btn" style="margin-top: 20px;">
+                            <i class="fas fa-plus"></i>
+                            Create First Recipe
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Recipe Modal -->
+    <div class="recipe-modal" id="recipeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="modal-close" id="modalClose">&times;</button>
+                <span class="modal-category" id="modalCategory">Main Course</span>
+                <h2 class="modal-title" id="modalTitle">Recipe Title</h2>
+                <div class="modal-meta" id="modalMeta">
+                    <span><i class="far fa-clock"></i> 30 min</span>
+                    <span><i class="fas fa-fire"></i> 280 cal</span>
+                    <span><i class="fas fa-user-friends"></i> 4 servings</span>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="modal-image" id="modalImage"></div>
+                <div class="recipe-details" id="recipeDetails">
+                    <!-- Recipe details will be inserted here -->
+                </div>
+                <div class="ingredients-section">
+                    <h3 class="section-title">Ingredients</h3>
+                    <ul class="ingredients-list" id="ingredientsList">
+                        <!-- Ingredients will be inserted here -->
+                    </ul>
+                </div>
+                <div class="instructions-section">
+                    <h3 class="section-title">Instructions</h3>
+                    <ol class="instructions-list" id="instructionsList">
+                        <!-- Instructions will be inserted here -->
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const recipeModal = document.getElementById('recipeModal');
+            const modalClose = document.getElementById('modalClose');
+            const modalCategory = document.getElementById('modalCategory');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMeta = document.getElementById('modalMeta');
+            const modalImage = document.getElementById('modalImage');
+            const recipeDetails = document.getElementById('recipeDetails');
+            const ingredientsList = document.getElementById('ingredientsList');
+            const instructionsList = document.getElementById('instructionsList');
+            const recipeCards = document.querySelectorAll('.recipe-card');
+            const featuredRecipe = document.querySelector('.featured-recipe');
+            const searchInput = document.getElementById('searchInput');
+            const categoryButtons = document.querySelectorAll('.category-btn');
+
+            // Fade-in animation on scroll
+            const fadeElements = document.querySelectorAll('.fade-in');
+            
+            const fadeInOnScroll = function() {
+                fadeElements.forEach(element => {
+                    const elementTop = element.getBoundingClientRect().top;
+                    const elementVisible = 150;
+                    
+                    if (elementTop < window.innerHeight - elementVisible) {
+                        element.classList.add('visible');
+                    }
+                });
+            };
+            
+            // Check on load
+            fadeInOnScroll();
+            
+            // Check on scroll
+            window.addEventListener('scroll', fadeInOnScroll);
+
+            // Open recipe modal
+            async function openRecipeModal(recipeId) {
+                try {
+                    const response = await fetch(`/get_recipe/${recipeId}`);
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        const recipe = result.recipe;
+                        modalCategory.textContent = recipe.category;
+                        modalTitle.textContent = recipe.title;
+                        modalMeta.innerHTML = `
+                            <span><i class="far fa-clock"></i> ${recipe.total_time}</span>
+                            <span><i class="fas fa-fire"></i> ${recipe.calories}</span>
+                            <span><i class="fas fa-user-friends"></i> ${recipe.servings}</span>
+                        `;
+                        modalImage.style.backgroundImage = `url('${recipe.image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}')`;
+                        
+                        // Set recipe details
+                        recipeDetails.innerHTML = '';
+                        const details = [
+                            { label: "Prep Time", value: recipe.prep_time },
+                            { label: "Cook Time", value: recipe.cook_time },
+                            { label: "Difficulty", value: recipe.difficulty }
+                        ];
+                        
+                        details.forEach(detail => {
+                            const detailItem = document.createElement('div');
+                            detailItem.className = 'detail-item';
+                            detailItem.innerHTML = `
+                                <div class="detail-value">${detail.value}</div>
+                                <div class="detail-label">${detail.label}</div>
+                            `;
+                            recipeDetails.appendChild(detailItem);
+                        });
+                        
+                        // Set ingredients
+                        ingredientsList.innerHTML = '';
+                        if (recipe.ingredients) {
+                            const ingredients = recipe.ingredients.split('\n');
+                            ingredients.forEach(ingredient => {
+                                if (ingredient.trim()) {
+                                    const li = document.createElement('li');
+                                    li.textContent = ingredient.trim();
+                                    ingredientsList.appendChild(li);
+                                }
+                            });
+                        }
+                        
+                        // Set instructions
+                        instructionsList.innerHTML = '';
+                        if (recipe.instructions) {
+                            const instructions = recipe.instructions.split('\n');
+                            instructions.forEach((instruction, index) => {
+                                if (instruction.trim()) {
+                                    const li = document.createElement('li');
+                                    li.innerHTML = `
+                                        <div class="step-number">${index + 1}</div>
+                                        <div class="step-text">${instruction.trim()}</div>
+                                    `;
+                                    instructionsList.appendChild(li);
+                                }
+                            });
+                        }
+                        
+                        recipeModal.style.display = 'block';
+                        document.body.style.overflow = 'hidden';
+                    } else {
+                        alert('Error loading recipe: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Error fetching recipe:', error);
+                    alert('Error loading recipe. Please try again.');
+                }
+            }
+
+            // Close modal
+            function closeModal() {
+                recipeModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+
+            // Recipe card interactions
+            recipeCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    const recipeId = this.getAttribute('data-recipe-id');
+                    openRecipeModal(recipeId);
+                });
+            });
+
+            // Featured recipe interaction
+            if (featuredRecipe) {
+                featuredRecipe.addEventListener('click', function() {
+                    const recipeId = this.getAttribute('data-recipe-id');
+                    openRecipeModal(recipeId);
+                });
+            }
+
+            // Modal close button
+            modalClose.addEventListener('click', closeModal);
+
+            // Close modal when clicking outside content
+            recipeModal.addEventListener('click', function(e) {
+                if (e.target === recipeModal) {
+                    closeModal();
+                }
+            });
+
+            // Close modal with Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeModal();
+                }
+            });
+
+            // Search functionality
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const recipeCards = document.querySelectorAll('.recipe-card');
+                
+                recipeCards.forEach(card => {
+                    const title = card.querySelector('.recipe-title').textContent.toLowerCase();
+                    const category = card.querySelector('.recipe-category').textContent.toLowerCase();
+                    const tags = card.querySelector('.recipe-tags').textContent.toLowerCase();
+                    
+                    if (title.includes(searchTerm) || category.includes(searchTerm) || tags.includes(searchTerm)) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+
+            // Category filtering
+            categoryButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    categoryButtons.forEach(btn => btn.classList.remove('active'));
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    const category = this.textContent;
+                    const recipeCards = document.querySelectorAll('.recipe-card');
+                    
+                    if (category === 'All') {
+                        recipeCards.forEach(card => {
+                            card.style.display = 'block';
+                        });
+                    } else {
+                        recipeCards.forEach(card => {
+                            const cardCategory = card.querySelector('.recipe-category').textContent;
+                            if (cardCategory === category) {
+                                card.style.display = 'block';
+                            } else {
+                                card.style.display = 'none';
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

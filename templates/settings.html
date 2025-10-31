@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings | Cognifit</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .settings-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .settings-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .settings-header h1 {
+            font-size: 2.5rem;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+
+        .settings-header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .settings-section {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--card-shadow);
+            border-left: 4px solid var(--primary-color);
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .section-header i {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin-right: 15px;
+        }
+
+        .section-header h2 {
+            font-size: 1.5rem;
+            color: var(--text-dark);
+            margin: 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-family: var(--font-family);
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(171, 200, 95, 0.2);
+        }
+
+        .form-control:read-only {
+            background-color: #f8f9fa;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-family: var(--font-family);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+        }
+
+        .btn-primary:hover {
+            background-color: #9ab855;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .alert {
+            padding: 12px 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .help-text {
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .settings-section {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="logo">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="CogniFit Logo">
+            </div>
+            
+            <div class="user-menu">
+                {% if session.get('user_id') %}
+                    <div class="user-profile">
+                        <div class="avatar">{{ session.get('username')[0]|upper if session.get('username') else 'U' }}</div>
+                        <span>{{ session.get('username', 'User') }}</span>
+                    </div>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-primary" style="margin-right:10px;">Login</a>
+                    <a href="{{ url_for('signup') }}" class="btn btn-primary">Signup</a>
+                {% endif %}
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.path == url_for('dashboard') %}active{% endif %}">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item {% if request.path == '/progress' %}active{% endif %}" onclick="alert('Progress page coming soon!')">
+                <i class="fas fa-chart-line"></i>
+                <span>Progress</span>
+            </a>
+            <a href="{{ url_for('recipes') }}" class="nav-item {% if request.path == url_for('recipes') %}active{% endif %}">
+                <i class="fas fa-utensils"></i>
+                <span>Recipes</span>
+            </a>
+            <a href="{{ url_for('cycle_form') }}" class="nav-item {% if request.path == url_for('cycle_form') %}active{% endif %}">
+                <i class="fas fa-female"></i>
+                <span>Cycle Tracking</span>
+            </a>
+            <a href="{{ url_for('blogs') }}" class="nav-item {% if request.path == url_for('blogs') %}active{% endif %}">
+                <i class="fas fa-newspaper"></i>
+                <span>Blogs</span>
+            </a>
+            <<a href="{{ url_for('calendar') }}" class="nav-item {% if request.path == url_for('calendar') %}active{% endif %}">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Calendar</span>
+            </a>
+            <a href="#" class="nav-item {% if request.path == '/snap' %}active{% endif %}" onclick="alert('Snap feature coming soon!')">
+                <i class="fas fa-camera"></i>
+                <span>Snap</span>
+            </a>
+            <a href="{{ url_for('settings') }}" class="nav-item {% if request.path == url_for('settings') %}active{% endif %}">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+            <a href="{{ url_for('logout') }}" class="nav-item">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="dashboard-content">
+            <div class="settings-container">
+                <!-- Settings Header -->
+                <div class="settings-header">
+                    <h1>Settings</h1>
+                    <p>Manage your account settings</p>
+                </div>
+
+                <!-- Profile Settings -->
+                <div class="settings-section">
+                    <div class="section-header">
+                        <i class="fas fa-user"></i>
+                        <h2>Profile Information</h2>
+                    </div>
+                    
+                    <div id="profileAlert" class="alert"></div>
+                    
+                    <div class="form-group">
+                        <label for="fullName">Full Name</label>
+                        <input type="text" id="fullName" class="form-control" value="{{ user_data.name if user_data else session.get('username', '') }}" placeholder="Enter your full name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" class="form-control" value="{{ user_email }}" readonly>
+                        <span class="help-text">Email cannot be changed</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" class="form-control" value="{{ user_data.phone if user_data else '' }}" placeholder="Enter your phone number">
+                        <span class="help-text">Optional - for account recovery</span>
+                    </div>
+
+                    <button class="btn btn-primary" id="updateProfileBtn" onclick="updateProfile()">
+                        <i class="fas fa-save"></i> Update Profile
+                    </button>
+                </div>
+
+                <!-- Password Settings -->
+                <div class="settings-section">
+                    <div class="section-header">
+                        <i class="fas fa-lock"></i>
+                        <h2>Change Password</h2>
+                    </div>
+                    
+                    <div id="passwordAlert" class="alert"></div>
+                    
+                    <div class="form-group">
+                        <label for="currentPassword">Current Password</label>
+                        <input type="password" id="currentPassword" class="form-control" placeholder="Enter current password">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="newPassword">New Password</label>
+                        <input type="password" id="newPassword" class="form-control" placeholder="Enter new password">
+                        <span class="help-text">Must be at least 8 characters with a number and uppercase letter</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm New Password</label>
+                        <input type="password" id="confirmPassword" class="form-control" placeholder="Confirm new password">
+                    </div>
+
+                    <button class="btn btn-primary" id="changePasswordBtn" onclick="changePassword()">
+                        <i class="fas fa-key"></i> Change Password
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Update profile function
+        async function updateProfile() {
+            const fullName = document.getElementById('fullName').value;
+            const phone = document.getElementById('phone').value;
+            const button = document.getElementById('updateProfileBtn');
+            const alert = document.getElementById('profileAlert');
+            
+            // Hide previous alerts
+            alert.style.display = 'none';
+            
+            if (!fullName) {
+                showAlert(alert, 'Please enter your full name', 'error');
+                return;
+            }
+            
+            // Basic phone validation (optional)
+            if (phone && !/^[\+]?[1-9][\d]{0,15}$/.test(phone.replace(/[\s\-\(\)]/g, ''))) {
+                showAlert(alert, 'Please enter a valid phone number', 'error');
+                return;
+            }
+            
+            // Disable button and show loading
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('fullname', fullName);
+                formData.append('phone_number', phone);
+                
+                const response = await fetch('/update_profile', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert(alert, result.message, 'success');
+                    // Update the header username if it changed
+                    document.querySelector('.user-profile span').textContent = fullName;
+                } else {
+                    showAlert(alert, result.message, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                showAlert(alert, 'Error updating profile', 'error');
+            } finally {
+                // Re-enable button
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-save"></i> Update Profile';
+            }
+        }
+
+        // Change password function
+        async function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const button = document.getElementById('changePasswordBtn');
+            const alert = document.getElementById('passwordAlert');
+            
+            // Hide previous alerts
+            alert.style.display = 'none';
+            
+            // Validation
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                showAlert(alert, 'Please fill in all password fields', 'error');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                showAlert(alert, 'New passwords do not match', 'error');
+                return;
+            }
+            
+            if (newPassword.length < 8) {
+                showAlert(alert, 'Password must be at least 8 characters long', 'error');
+                return;
+            }
+            
+            if (!/\d/.test(newPassword)) {
+                showAlert(alert, 'Password must include at least one number', 'error');
+                return;
+            }
+            
+            if (!/[A-Z]/.test(newPassword)) {
+                showAlert(alert, 'Password must include at least one uppercase letter', 'error');
+                return;
+            }
+            
+            // Disable button and show loading
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Changing...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('current_password', currentPassword);
+                formData.append('new_password', newPassword);
+                
+                const response = await fetch('/change_password', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert(alert, result.message, 'success');
+                    // Clear password fields
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                } else {
+                    showAlert(alert, result.message, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error changing password:', error);
+                showAlert(alert, 'Error changing password', 'error');
+            } finally {
+                // Re-enable button
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-key"></i> Change Password';
+            }
+        }
+
+        // Helper function to show alerts
+        function showAlert(alertElement, message, type) {
+            alertElement.textContent = message;
+            alertElement.className = `alert alert-${type}`;
+            alertElement.style.display = 'block';
+            
+            // Auto-hide success messages after 5 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    alertElement.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // Load user data when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Settings page loaded with user data');
+        });
+    </script>
+</body>
+</html>

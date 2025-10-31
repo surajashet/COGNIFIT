@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cycle Tracking | Your Brand</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================== */
+        /* GLOBAL VARIABLES & RESET */
+        /* ============================================== */
+        :root {
+            --primary-color: #abc85f;
+            --secondary-color: #a3391a;
+            --accent-color: #6A8CAF;
+            --text-dark: #2c2c2c;
+            --text-light: #fff;
+            --bg-light: #f7f7f7;
+            --bg-gray: #f0f0f0;
+            --card-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            --hover-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+            --border-radius: 12px;
+            --font-family: 'Poppins', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            color: var(--text-dark);
+            line-height: 1.5;
+            background-color: var(--bg-light);
+            min-height: 100vh;
+            font-size: 14px;
+        }
+
+        /* ============================================== */
+        /* DASHBOARD LAYOUT */
+        /* ============================================== */
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            grid-template-rows: 60px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .dashboard-header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .logo i {
+            margin-right: 8px;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            font-size: 14px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background-color: var(--text-light);
+            padding: 20px 0;
+            box-shadow: var(--card-shadow);
+            z-index: 90;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--text-dark);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: rgba(171, 200, 95, 0.15);
+            color: var(--primary-color);
+            border-right: 3px solid var(--primary-color);
+        }
+
+        .nav-item i {
+            margin-right: 12px;
+            width: 18px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        /* Main Content */
+        .dashboard-content {
+            padding: 20px;
+            background-color: var(--bg-light);
+            overflow-y: auto;
+        }
+
+        /* Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-dark);
+            position: relative;
+            padding-bottom: 8px;
+        }
+
+        .page-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 3px;
+        }
+
+        /* Cards and Forms */
+        .info-card {
+            background-color: white;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            margin-bottom: 25px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title i {
+            color: var(--primary-color);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-family: var(--font-family);
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(171, 200, 95, 0.2);
+        }
+
+        .form-group input.invalid {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 2px rgba(163, 57, 26, 0.2);
+        }
+
+        .error-message {
+            color: var(--secondary-color);
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-family: var(--font-family);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+        }
+
+        .btn-primary:hover {
+            background-color: #9ab855;
+            transform: translateY(-2px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: var(--text-light);
+        }
+
+        /* Results Section */
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .result-card {
+            background-color: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .result-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .result-title i {
+            color: var(--primary-color);
+        }
+
+        .result-item {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .result-value {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        /* History Table */
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            margin-top: 15px;
+        }
+
+        .history-table th {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            padding: 15px;
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .history-table td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            color: var(--text-dark);
+        }
+
+        .history-table tr:hover {
+            background-color: rgba(171, 200, 95, 0.05);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            color: #ddd;
+            margin-bottom: 15px;
+        }
+
+        /* Alert Box */
+        .alert-box {
+            background: linear-gradient(135deg, rgba(171, 200, 95, 0.1) 0%, rgba(163, 57, 26, 0.05) 100%);
+            border-left: 4px solid var(--primary-color);
+            padding: 15px 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+        }
+
+        .alert-box strong {
+            color: var(--primary-color);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+            
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .history-table {
+                font-size: 12px;
+            }
+            
+            .history-table th,
+            .history-table td {
+                padding: 10px;
+            }
+        }
+
+        /* Animation classes */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="logo">
+                <i class="fas fa-female"></i>
+                <span>Cycle Tracking</span>
+            </div>
+            
+            <div class="user-menu">
+                <div class="user-profile">
+                    <div class="avatar">JD</div>
+                    <span>Jane Doe</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <a href="{{ url_for('dashboard') }}" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Progress</span>
+            </a>
+            <a href="{{ url_for('recipes') }}" class="nav-item">
+                <i class="fas fa-utensils"></i>
+                <span>Recipes</span>
+            </a>
+            <a href="{{ url_for('cycle_form') }}" class="nav-item active">
+                <i class="fas fa-female"></i>
+                <span>Cycle Tracking</span>
+            </a>
+            <a href="{{ url_for('blogs') }}" class="nav-item">
+                <i class="fas fa-newspaper"></i>
+                <span>Blogs</span>
+            </a>
+            <a href="{{ url_for('calendar') }}" class="nav-item {% if request.path == url_for('calendar') %}active{% endif %}">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Calendar</span>
+            </a>
+            <a href="#" class="nav-item" onclick="alert('Snap feature coming soon!')">
+                <i class="fas fa-camera"></i>
+                <span>Snap</span>
+            </a>
+            <a href="{{ url_for('settings') }}" class="nav-item {% if request.path == url_for('settings') %}active{% endif %}">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+            <a href="{{ url_for('logout') }}" class="nav-item">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="dashboard-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1 class="page-title">Cycle Tracking</h1>
+            </div>
+
+            <!-- Alert Box -->
+            <div class="alert-box">
+                <strong>💡 For accurate predictions:</strong> Enter at least 3 recent period start dates. Future dates are not allowed.
+            </div>
+
+            <!-- Input Form -->
+            <div class="info-card">
+                <h2 class="card-title"><i class="fas fa-calendar-plus"></i> Enter Your Period Dates</h2>
+                <form id="cycleForm">
+                    <div class="form-group">
+                        <label for="date1">Most Recent Period Start:</label>
+                        <input type="date" id="date1" name="date1" required>
+                        <div class="error-message" id="error1">Future dates are not allowed</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="date2">Previous Period Start:</label>
+                        <input type="date" id="date2" name="date2" required>
+                        <div class="error-message" id="error2">Future dates are not allowed</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="date3">Period Start Before That:</label>
+                        <input type="date" id="date3" name="date3" required>
+                        <div class="error-message" id="error3">Future dates are not allowed</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="date4">Additional Period Start (Optional):</label>
+                        <input type="date" id="date4" name="date4">
+                        <div class="error-message" id="error4">Future dates are not allowed</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="date5">Additional Period Start (Optional):</label>
+                        <input type="date" id="date5" name="date5">
+                        <div class="error-message" id="error5">Future dates are not allowed</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-calculator"></i> Calculate Next Period
+                    </button>
+                </form>
+            </div>
+
+            <!-- Results Section -->
+            <div class="info-card" id="resultsSection" style="display: none;">
+                <h2 class="card-title"><i class="fas fa-chart-line"></i> Your Cycle Analysis</h2>
+                <div class="results-grid" id="predictionResults">
+                    <!-- Results will be populated here -->
+                </div>
+            </div>
+
+            <!-- History Section -->
+            <div class="info-card">
+                <h2 class="card-title"><i class="fas fa-history"></i> Cycle History</h2>
+                <div id="historyTableContainer">
+                    <div class="empty-state">
+                        <i class="fas fa-calendar-times"></i>
+                        <h3>No Cycle History Yet</h3>
+                        <p>Enter your period dates above to get started with tracking</p>
+                    </div>
+                </div>
+                <button onclick="clearHistory()" class="btn btn-secondary" style="margin-top: 15px;">
+                    <i class="fas fa-trash"></i> Clear History
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Load history from localStorage
+        let cycleHistory = JSON.parse(localStorage.getItem('cycleHistory')) || [];
+
+        // Get today's date for validation
+        const today = new Date();
+        const maxDate = today.toISOString().split('T')[0];
+
+        // Display history on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            displayHistory();
+            setDefaultDates();
+            initializeDateValidation();
+            
+            // Add animation observer
+            const fadeElements = document.querySelectorAll('.fade-in');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            fadeElements.forEach(element => {
+                observer.observe(element);
+            });
+        });
+
+        function initializeDateValidation() {
+            // Set max attribute to today for all date inputs
+            const dateInputs = document.querySelectorAll('input[type="date"]');
+            dateInputs.forEach(input => {
+                input.setAttribute('max', maxDate);
+                
+                // Add input event listener for real-time validation
+                input.addEventListener('input', function() {
+                    validateDate(this);
+                });
+                
+                // Add change event listener for validation
+                input.addEventListener('change', function() {
+                    validateDate(this);
+                });
+            });
+        }
+
+        function validateDate(input) {
+            const selectedDate = new Date(input.value);
+            const errorElement = document.getElementById(`error${input.id.slice(-1)}`);
+            
+            // Check if date is in the future
+            if (selectedDate > today) {
+                input.classList.add('invalid');
+                errorElement.style.display = 'block';
+                return false;
+            }
+            
+            // Date is valid (past or today)
+            input.classList.remove('invalid');
+            errorElement.style.display = 'none';
+            return true;
+        }
+
+        function validateAllDates() {
+            const dateInputs = document.querySelectorAll('input[type="date"]');
+            let allValid = true;
+            
+            dateInputs.forEach(input => {
+                if (input.value && !validateDate(input)) {
+                    allValid = false;
+                }
+            });
+            
+            return allValid;
+        }
+
+        function setDefaultDates() {
+            const date1 = document.getElementById('date1');
+            const date2 = document.getElementById('date2');
+            const date3 = document.getElementById('date3');
+
+            // Set default dates (today, 28 days ago, 56 days ago)
+            date1.valueAsDate = today;
+            
+            const date2Obj = new Date(today);
+            date2Obj.setDate(today.getDate() - 28);
+            date2.valueAsDate = date2Obj;
+            
+            const date3Obj = new Date(today);
+            date3Obj.setDate(today.getDate() - 56);
+            date3.valueAsDate = date3Obj;
+        }
+
+        // Form submission - DATA DRIVEN APPROACH
+        document.getElementById('cycleForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Validate all dates before processing
+            if (!validateAllDates()) {
+                alert('Please correct the date errors before submitting. Future dates are not allowed.');
+                return;
+            }
+            
+            // Get all date inputs that have values
+            const dates = [
+                document.getElementById('date1').value,
+                document.getElementById('date2').value,
+                document.getElementById('date3').value,
+                document.getElementById('date4').value,
+                document.getElementById('date5').value
+            ].filter(date => date !== ''); // Remove empty dates
+
+            if (dates.length < 3) {
+                alert('Please enter at least 3 period dates for accurate prediction.');
+                return;
+            }
+
+            // Sort dates chronologically (oldest first for easier calculation)
+            dates.sort((a, b) => new Date(a) - new Date(b));
+
+            // Calculate actual cycle lengths from the data
+            const cycleLengths = [];
+            for (let i = 0; i < dates.length - 1; i++) {
+                const start = new Date(dates[i]);
+                const end = new Date(dates[i + 1]);
+                const diffTime = Math.abs(end - start);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                cycleLengths.push(diffDays);
+            }
+
+            // Calculate average cycle length from actual data
+            const avgCycleLength = cycleLengths.reduce((a, b) => a + b, 0) / cycleLengths.length;
+            const roundedAvg = Math.round(avgCycleLength);
+
+            // Calculate next period using ACTUAL DATA (not rule-based)
+            const lastPeriod = new Date(dates[dates.length - 1]); // Most recent period
+            const nextPeriod = new Date(lastPeriod);
+            nextPeriod.setDate(lastPeriod.getDate() + roundedAvg);
+
+            // Calculate ovulation (using actual luteal phase estimate)
+            const ovulation = new Date(nextPeriod);
+            ovulation.setDate(nextPeriod.getDate() - 14);
+
+            // Calculate fertile window
+            const fertileStart = new Date(ovulation);
+            fertileStart.setDate(ovulation.getDate() - 5);
+            const fertileEnd = new Date(ovulation);
+            fertileEnd.setDate(ovulation.getDate() + 1);
+
+            // Display results
+            displayResults({
+                nextPeriod: nextPeriod,
+                ovulation: ovulation,
+                fertileStart: fertileStart,
+                fertileEnd: fertileEnd,
+                avgCycleLength: roundedAvg,
+                cycleLengths: cycleLengths
+            });
+
+            // Add to history
+            addToHistory(dates[dates.length - 1], roundedAvg, cycleLengths);
+        });
+
+        function displayResults(analysis) {
+            const resultsDiv = document.getElementById('predictionResults');
+            const resultsSection = document.getElementById('resultsSection');
+            
+            resultsDiv.innerHTML = `
+                <div class="result-card fade-in">
+                    <h3 class="result-title"><i class="fas fa-calendar-day"></i> Next Period Prediction</h3>
+                    <div class="result-item">
+                        <span>Date:</span>
+                        <span class="result-value">${formatDate(analysis.nextPeriod)}</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Average Cycle Length:</span>
+                        <span class="result-value">${analysis.avgCycleLength} days</span>
+                    </div>
+                </div>
+                
+                <div class="result-card fade-in">
+                    <h3 class="result-title"><i class="fas fa-egg"></i> Fertility Information</h3>
+                    <div class="result-item">
+                        <span>Estimated Ovulation:</span>
+                        <span class="result-value">${formatDate(analysis.ovulation)}</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Fertile Window:</span>
+                        <span class="result-value">${formatDate(analysis.fertileStart)} - ${formatDate(analysis.fertileEnd)}</span>
+                    </div>
+                </div>
+                
+                <div class="result-card fade-in">
+                    <h3 class="result-title"><i class="fas fa-chart-bar"></i> Cycle Analysis</h3>
+                    <div class="result-item">
+                        <span>Cycle Lengths:</span>
+                        <span class="result-value">${analysis.cycleLengths.join(', ')} days</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Cycle Variability:</span>
+                        <span class="result-value">${Math.max(...analysis.cycleLengths) - Math.min(...analysis.cycleLengths)} days</span>
+                    </div>
+                </div>
+            `;
+            
+            resultsSection.style.display = 'block';
+            
+            // Trigger animations
+            setTimeout(() => {
+                const fadeElements = resultsDiv.querySelectorAll('.fade-in');
+                fadeElements.forEach(element => {
+                    element.classList.add('visible');
+                });
+            }, 100);
+        }
+
+        function formatDate(date) {
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+
+        function addToHistory(periodDate, avgCycleLength, cycleLengths) {
+            const entry = {
+                periodDate: periodDate,
+                avgCycleLength: avgCycleLength,
+                cycleLengths: cycleLengths,
+                calculatedAt: new Date().toISOString()
+            };
+            
+            cycleHistory.unshift(entry);
+            
+            // Keep only last 10 entries
+            if (cycleHistory.length > 10) {
+                cycleHistory = cycleHistory.slice(0, 10);
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('cycleHistory', JSON.stringify(cycleHistory));
+            
+            // Update display
+            displayHistory();
+        }
+
+        function displayHistory() {
+            const container = document.getElementById('historyTableContainer');
+            
+            if (cycleHistory.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-calendar-times"></i>
+                        <h3>No Cycle History Yet</h3>
+                        <p>Enter your period dates above to get started with tracking</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = `
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Period Date</th>
+                            <th>Cycle Length</th>
+                            <th>Calculated On</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            cycleHistory.forEach(entry => {
+                const periodDate = new Date(entry.periodDate);
+                const calculatedDate = new Date(entry.calculatedAt);
+                
+                html += `
+                    <tr class="fade-in">
+                        <td>${formatDate(periodDate)}</td>
+                        <td>${entry.avgCycleLength} days</td>
+                        <td>${formatDate(calculatedDate)}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = html;
+            
+            // Trigger animations
+            setTimeout(() => {
+                const fadeElements = container.querySelectorAll('.fade-in');
+                fadeElements.forEach(element => {
+                    element.classList.add('visible');
+                });
+            }, 100);
+        }
+
+        function clearHistory() {
+            if (confirm('Are you sure you want to clear all your cycle history? This cannot be undone.')) {
+                cycleHistory = [];
+                localStorage.removeItem('cycleHistory');
+                displayHistory();
+                document.getElementById('resultsSection').style.display = 'none';
+                setDefaultDates();
+            }
+        }
+    </script>
+</body>
+</html>

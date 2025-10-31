@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Recipes - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================== */
+        /* GLOBAL VARIABLES & RESET */
+        /* ============================================== */
+        :root {
+            --primary-color: #abc85f;
+            --secondary-color: #a3391a;
+            --accent-color: #6A8CAF;
+            --text-dark: #2c2c2c;
+            --text-light: #fff;
+            --bg-light: #f7f7f7;
+            --bg-gray: #f0f0f0;
+            --card-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            --hover-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+            --border-radius: 12px;
+            --font-family: 'Poppins', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            color: var(--text-dark);
+            line-height: 1.5;
+            background-color: var(--bg-light);
+            min-height: 100vh;
+            font-size: 14px;
+        }
+
+        /* ============================================== */
+        /* DASHBOARD LAYOUT */
+        /* ============================================== */
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            grid-template-rows: 60px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .dashboard-header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .logo i {
+            margin-right: 8px;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            font-size: 14px;
+        }
+
+        /* Admin Button */
+        .admin-btn {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-family: var(--font-family);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 15px;
+            text-decoration: none;
+        }
+
+        .admin-btn:hover {
+            background: #8c3c2a;
+            transform: translateY(-2px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background-color: var(--text-light);
+            padding: 20px 0;
+            box-shadow: var(--card-shadow);
+            z-index: 90;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--text-dark);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: rgba(171, 200, 95, 0.15);
+            color: var(--primary-color);
+            border-right: 3px solid var(--primary-color);
+        }
+
+        .nav-item i {
+            margin-right: 12px;
+            width: 18px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        /* Main Content */
+        .dashboard-content {
+            padding: 20px;
+            background-color: var(--bg-light);
+            overflow-y: auto;
+        }
+
+        /* Admin Page Specific Styles */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-dark);
+            position: relative;
+            padding-bottom: 8px;
+        }
+
+        .page-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 3px;
+        }
+
+        /* Admin Controls */
+        .admin-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-family: var(--font-family);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            background: #95b355;
+            transform: translateY(-2px);
+        }
+
+        /* Recipes Table */
+        .recipes-table {
+            background: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
+        }
+
+        .table-header {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+            gap: 15px;
+            padding: 15px 20px;
+            background: var(--bg-gray);
+            font-weight: 600;
+            border-bottom: 1px solid #eee;
+        }
+
+        .table-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+            gap: 15px;
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            align-items: center;
+        }
+
+        .table-row:hover {
+            background: var(--bg-gray);
+        }
+
+        .table-row:last-child {
+            border-bottom: none;
+        }
+
+        .recipe-title {
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .recipe-image {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .category-badge {
+            background: var(--primary-color);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .featured-badge {
+            background: var(--secondary-color);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-edit, .btn-delete {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-edit {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #5a7a9a;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background-color: white;
+            max-width: 600px;
+            margin: 40px auto;
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .modal-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid #eee;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #888;
+            transition: color 0.2s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--secondary-color);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: var(--font-family);
+            font-size: 14px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(171, 200, 95, 0.2);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-check {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-check input {
+            margin: 0;
+        }
+
+        .modal-footer {
+            padding: 20px 25px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .loading i {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+
+        /* No Recipes Message */
+        .no-recipes {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .no-recipes i {
+            font-size: 4rem;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+
+        .no-recipes h3 {
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+            
+            .table-header, .table-row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .action-buttons {
+                justify-content: flex-start;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .admin-controls {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="logo">
+                <i class="fas fa-utensils"></i>
+                <span>Manage Recipes</span>
+            </div>
+            
+            <div class="user-menu">
+                <a href="{{ url_for('recipes') }}" class="admin-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Recipes
+                </a>
+                <div class="user-profile">
+                    <div class="avatar">{{ user_name[0]|upper if user_name else 'U' }}</div>
+                    <span>{{ user_name or 'User' }}</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <a href="{{ url_for('dashboard') }}" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Progress</span>
+            </a>
+            <a href="{{ url_for('recipes') }}" class="nav-item">
+                <i class="fas fa-utensils"></i>
+                <span>Recipes</span>
+            </a>
+            <a href="{{ url_for('cycle_form') }}" class="nav-item">
+                <i class="fas fa-female"></i>
+                <span>Cycle Tracking</span>
+            </a>
+            <a href="{{ url_for('blogs') }}" class="nav-item">
+                <i class="fas fa-newspaper"></i>
+                <span>Blogs</span>
+            </a>
+            <a href="{{ url_for('calendar') }}" class="nav-item">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Calendar</span>
+            </a>
+            <a href="#" class="nav-item" onclick="alert('Snap feature coming soon!')">
+                <i class="fas fa-camera"></i>
+                <span>Snap</span>
+            </a>
+            <a href="{{ url_for('settings') }}" class="nav-item">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+            <a href="{{ url_for('logout') }}" class="nav-item">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="dashboard-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1 class="page-title">Manage Recipes</h1>
+                <div class="admin-controls">
+                    <button class="btn-primary" id="createRecipeBtn">
+                        <i class="fas fa-plus"></i>
+                        Create New Recipe
+                    </button>
+                </div>
+            </div>
+
+            <!-- Recipes Table -->
+            <div class="recipes-table" id="recipesTable">
+                <div class="table-header">
+                    <div>Recipe</div>
+                    <div>Category</div>
+                    <div>Time</div>
+                    <div>Calories</div>
+                    <div>Featured</div>
+                    <div>Actions</div>
+                </div>
+                <div id="recipesList">
+                    <!-- Recipes will be loaded here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Create/Edit Recipe Modal -->
+    <div class="modal" id="recipeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Create New Recipe</h2>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <form id="recipeForm">
+                <div class="modal-body">
+                    <input type="hidden" id="recipeId">
+                    
+                    <div class="form-group">
+                        <label for="recipeTitle">Recipe Title *</label>
+                        <input type="text" id="recipeTitle" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="recipeCategory">Category *</label>
+                        <select id="recipeCategory" class="form-control" required>
+                            <option value="">Select Category</option>
+                            <option value="Main Course">Main Course</option>
+                            <option value="Soup">Soup</option>
+                            <option value="Salad">Salad</option>
+                            <option value="Breakfast">Breakfast</option>
+                            <option value="Snack">Snack</option>
+                            <option value="Dessert">Dessert</option>
+                            <option value="Drink">Drink</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="recipePrepTime">Prep Time</label>
+                            <input type="text" id="recipePrepTime" class="form-control" placeholder="15 min">
+                        </div>
+                        <div class="form-group">
+                            <label for="recipeCookTime">Cook Time</label>
+                            <input type="text" id="recipeCookTime" class="form-control" placeholder="30 min">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="recipeTotalTime">Total Time *</label>
+                            <input type="text" id="recipeTotalTime" class="form-control" placeholder="45 min" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="recipeDifficulty">Difficulty</label>
+                            <select id="recipeDifficulty" class="form-control">
+                                <option value="">Select Difficulty</option>
+                                <option value="Easy">Easy</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Hard">Hard</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="recipeCalories">Calories *</label>
+                            <input type="text" id="recipeCalories" class="form-control" placeholder="280 cal" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="recipeServings">Servings *</label>
+                            <input type="text" id="recipeServings" class="form-control" placeholder="4 servings" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="recipeTags">Tags (comma separated)</label>
+                        <input type="text" id="recipeTags" class="form-control" placeholder="Vegetarian, High Protein, Iron-Rich">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="recipeImage">Image URL</label>
+                        <input type="text" id="recipeImage" class="form-control" placeholder="https://example.com/image.jpg">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="recipeIngredients">Ingredients * (one per line)</label>
+                        <textarea id="recipeIngredients" class="form-control" rows="5" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="recipeInstructions">Instructions * (one per line)</label>
+                        <textarea id="recipeInstructions" class="form-control" rows="8" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input type="checkbox" id="recipeFeatured">
+                            <label for="recipeFeatured">Set as featured recipe</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" id="cancelBtn">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Recipe</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentEditingId = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const recipesList = document.getElementById('recipesList');
+            const recipeModal = document.getElementById('recipeModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const recipeForm = document.getElementById('recipeForm');
+            const createRecipeBtn = document.getElementById('createRecipeBtn');
+            const modalClose = document.getElementById('modalClose');
+            const cancelBtn = document.getElementById('cancelBtn');
+
+            // Load recipes on page load
+            loadRecipes();
+
+            // Create recipe button
+            createRecipeBtn.addEventListener('click', function() {
+                openRecipeModal();
+            });
+
+            // Close modal buttons
+            modalClose.addEventListener('click', closeModal);
+            cancelBtn.addEventListener('click', closeModal);
+
+            // Close modal when clicking outside
+            recipeModal.addEventListener('click', function(e) {
+                if (e.target === recipeModal) {
+                    closeModal();
+                }
+            });
+
+            // Form submission
+            recipeForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveRecipe();
+            });
+
+            // Load recipes function
+            async function loadRecipes() {
+                try {
+                    recipesList.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading recipes...</p></div>';
+                    
+                    const response = await fetch('/admin/get_recipes');
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        displayRecipes(result.recipes);
+                    } else {
+                        recipesList.innerHTML = '<div class="no-recipes"><i class="fas fa-utensils"></i><h3>No Recipes Found</h3><p>Create your first recipe to get started!</p></div>';
+                    }
+                } catch (error) {
+                    console.error('Error loading recipes:', error);
+                    recipesList.innerHTML = '<div class="no-recipes"><i class="fas fa-exclamation-triangle"></i><h3>Error Loading Recipes</h3><p>Please try again later.</p></div>';
+                }
+            }
+
+            // Display recipes in table
+            function displayRecipes(recipes) {
+                if (recipes.length === 0) {
+                    recipesList.innerHTML = '<div class="no-recipes"><i class="fas fa-utensils"></i><h3>No Recipes Available</h3><p>Create your first recipe to get started!</p></div>';
+                    return;
+                }
+
+                recipesList.innerHTML = '';
+                
+                recipes.forEach(recipe => {
+                    const row = document.createElement('div');
+                    row.className = 'table-row';
+                    row.innerHTML = `
+                        <div class="recipe-title">
+                            <div class="recipe-image" style="background-image: url('${recipe.image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}')"></div>
+                            ${recipe.title}
+                        </div>
+                        <div><span class="category-badge">${recipe.category}</span></div>
+                        <div>${recipe.total_time}</div>
+                        <div>${recipe.calories}</div>
+                        <div>${recipe.is_featured ? '<span class="featured-badge">Featured</span>' : '-'}</div>
+                        <div class="action-buttons">
+                            <button class="btn-edit" onclick="editRecipe(${recipe.id})">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn-delete" onclick="deleteRecipe(${recipe.id})">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    `;
+                    recipesList.appendChild(row);
+                });
+            }
+
+            // Open recipe modal
+            function openRecipeModal(recipe = null) {
+                currentEditingId = recipe ? recipe.id : null;
+                modalTitle.textContent = recipe ? 'Edit Recipe' : 'Create New Recipe';
+                
+                if (recipe) {
+                    // Fill form with existing data
+                    document.getElementById('recipeId').value = recipe.id;
+                    document.getElementById('recipeTitle').value = recipe.title;
+                    document.getElementById('recipeCategory').value = recipe.category;
+                    document.getElementById('recipePrepTime').value = recipe.prep_time || '';
+                    document.getElementById('recipeCookTime').value = recipe.cook_time || '';
+                    document.getElementById('recipeTotalTime').value = recipe.total_time;
+                    document.getElementById('recipeDifficulty').value = recipe.difficulty || '';
+                    document.getElementById('recipeCalories').value = recipe.calories;
+                    document.getElementById('recipeServings').value = recipe.servings;
+                    document.getElementById('recipeTags').value = recipe.tags || '';
+                    document.getElementById('recipeImage').value = recipe.image_url || '';
+                    document.getElementById('recipeIngredients').value = recipe.ingredients;
+                    document.getElementById('recipeInstructions').value = recipe.instructions;
+                    document.getElementById('recipeFeatured').checked = recipe.is_featured || false;
+                } else {
+                    // Clear form for new recipe
+                    recipeForm.reset();
+                }
+                
+                recipeModal.style.display = 'block';
+            }
+
+            // Close modal
+            function closeModal() {
+                recipeModal.style.display = 'none';
+                currentEditingId = null;
+            }
+
+            // Save recipe
+            async function saveRecipe() {
+                const formData = {
+                    title: document.getElementById('recipeTitle').value,
+                    category: document.getElementById('recipeCategory').value,
+                    prep_time: document.getElementById('recipePrepTime').value,
+                    cook_time: document.getElementById('recipeCookTime').value,
+                    total_time: document.getElementById('recipeTotalTime').value,
+                    difficulty: document.getElementById('recipeDifficulty').value,
+                    calories: document.getElementById('recipeCalories').value,
+                    servings: document.getElementById('recipeServings').value,
+                    tags: document.getElementById('recipeTags').value,
+                    image_url: document.getElementById('recipeImage').value,
+                    ingredients: document.getElementById('recipeIngredients').value,
+                    instructions: document.getElementById('recipeInstructions').value,
+                    is_featured: document.getElementById('recipeFeatured').checked
+                };
+
+                try {
+                    const url = currentEditingId ? `/admin/update_recipe/${currentEditingId}` : '/admin/create_recipe';
+                    const method = currentEditingId ? 'POST' : 'POST';
+                    
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        alert(result.message);
+                        closeModal();
+                        loadRecipes();
+                    } else {
+                        alert('Error: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Error saving recipe:', error);
+                    alert('Error saving recipe. Please try again.');
+                }
+            }
+
+            // Global functions for buttons
+            window.editRecipe = function(recipeId) {
+                // Find recipe data and open modal
+                fetch('/admin/get_recipes')
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            const recipe = result.recipes.find(r => r.id === recipeId);
+                            if (recipe) {
+                                openRecipeModal(recipe);
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching recipe:', error);
+                        alert('Error loading recipe data.');
+                    });
+            };
+
+            window.deleteRecipe = function(recipeId) {
+                if (confirm('Are you sure you want to delete this recipe? This action cannot be undone.')) {
+                    fetch(`/admin/delete_recipe/${recipeId}`, {
+                        method: 'DELETE'
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            alert(result.message);
+                            loadRecipes();
+                        } else {
+                            alert('Error: ' + result.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error deleting recipe:', error);
+                        alert('Error deleting recipe. Please try again.');
+                    });
+                }
+            };
+        });
+    </script>
+</body>
+</html>

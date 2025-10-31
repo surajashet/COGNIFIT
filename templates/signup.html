@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up | Cognifit</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+   
+</head>
+<body>
+    <div class="signup-container">
+        <!-- Left -->
+        <div class="brand-panel">
+            <div class="brand-logo"><img src="{{ url_for('static', filename='logo.png') }}" alt="CogniFit Logo"></div>
+            <div class="decorative-element"><i class="fas fa-user-plus"></i></div>
+            <h2>Join Our Community!</h2>
+            <p>Create an account to access exclusive features and personalized content.</p>
+            <a href="{{ url_for('home') }}" class="btn btn-secondary">Back to Home</a>
+
+        </div>
+
+        <!-- Right -->
+        <div class="signup-panel">
+            <div class="signup-header">
+                <h1>Create Account</h1>
+                <p>Fill in your details to get started</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('signup') }}" class="signup-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firstname">First Name</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-user"></i>
+                            <input type="text" id="firstname" placeholder="John" name="firstname" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastname">Last Name</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-user"></i>
+                            <input type="text" id="lastname" name="lastname" placeholder="Doe" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group-full">
+                    <label>Gender</label>
+                    <div class="gender-options">
+                        <label><input type="radio" name="gender" value="male" required> Male</label>
+                        <label><input type="radio" name="gender" value="female"> Female</label>
+                        <label><input type="radio" name="gender" value="other"> Other</label>
+                        <label><input type="radio" name="gender" value="prefer-not"> Prefer not to say</label>
+                    </div>
+                </div>
+
+                <div class="form-group-full">
+                    <label for="email">Email Address</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="email" name="email" placeholder="name@company.com" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="password" name="password" required>
+                        </div>
+                        <div class="password-strength" data-score="0"></div>
+                        <div class="password-feedback">Password strength: Very weak</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm-password">Confirm Password</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="confirm-password" name="confirm-password" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="terms">
+                    <input type="checkbox" id="terms" required>
+                    <label for="terms">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></label>
+                </div>
+
+                <button type="submit" class="btn btn-primary signup-btn">Create Account</button>
+                <div class="login-link">
+                    Already have an account? <a href="{{ url_for('login') }}">Sign in here</a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirm-password');
+    const strengthMeter = document.querySelector('.password-strength');
+    const strengthFeedback = document.querySelector('.password-feedback');
+
+    passwordInput.addEventListener('input', function() {
+        const password = passwordInput.value;
+        let score = 0, feedback = '';
+        if (password.length >= 8) score++; else feedback = 'Password should be at least 8 characters. ';
+        if (/[a-z]/.test(password)) score++; else feedback += 'Add lowercase letters. ';
+        if (/[A-Z]/.test(password)) score++; else feedback += 'Add uppercase letters. ';
+        if (/[0-9]/.test(password)) score++; else feedback += 'Add numbers. ';
+        if (/[^A-Za-z0-9]/.test(password)) score++; else feedback += 'Add special characters. ';
+        strengthMeter.setAttribute('data-score', Math.min(4, score));
+        const strengthText = ['Very weak','Weak','Fair','Strong','Very strong'];
+        strengthFeedback.textContent = `Password strength: ${strengthText[Math.min(4, score)]}. ${feedback}`;
+    });
+
+    document.querySelector('.signup-form').addEventListener('submit', function(e) {
+        if(passwordInput.value !== confirmPasswordInput.value) {
+            alert("Passwords do not match!"); e.preventDefault();
+        }
+        if(!document.getElementById('terms').checked) {
+            alert("You must agree to the Terms of Service!"); e.preventDefault();
+        }
+    });
+});
+</script>
+</body>
+</html>

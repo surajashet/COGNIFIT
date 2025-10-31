@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Classifier</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .container {
+            max-width: 600px;
+        }
+        #dropzone {
+            position: relative;
+            height: 256px;
+            background-color: #f9fafb;
+            border: 2px dashed #d1d5db;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transition: background-color 0.2s;
+        }
+        #dropzone.has-image {
+            background-color: #ffffff;
+            border: 2px solid transparent;
+        }
+        #dropzone img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: none;
+        }
+        #dropzone.has-image img {
+            display: block;
+        }
+        #clear-button {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: none;
+        }
+        #dropzone.has-image #clear-button {
+            display: block;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="container bg-white p-8 rounded-xl shadow-lg border border-gray-200">
+        <div class="text-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Food Classifier</h1>
+            <p class="text-gray-500 mt-2">Upload a food image to get a prediction and nutrition info.</p>
+        </div>
+
+        <div class="flex items-center justify-center w-full mb-6">
+            <label id="dropzone" for="file-upload">
+                <div id="dropzone-text" class="flex flex-col items-center justify-center pt-5 pb-6 text-center">
+                    <svg class="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-4-4v-4a4 4 0 014-4h4l2-2h2m4-4h4a4 4 0 014 4v16a4 4 0 01-4 4H7a4 4 0 01-4-4V7a4 4 0 014-4"></path></svg>
+                    <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to upload</span> or drag and drop</p>
+                    <p class="text-xs text-gray-500">PNG or JPG (MAX. 5MB)</p>
+                </div>
+                <img id="image-preview" src="" alt="Image preview">
+                <button id="clear-button" class="bg-red-500 text-white rounded-full p-1" onclick="clearImage(event)">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+                <input id="file-upload" type="file" class="hidden" accept=".jpg,.jpeg,.png" onchange="handleFileUpload(event)"/>
+            </label>
+        </div>
+
+        <button id="predict-button" class="w-full px-4 py-3 text-white font-semibold bg-blue-600 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200" disabled>
+            Predict
+        </button>
+        
+        <!-- Or, Enter macros manually section -->
+        <div class="my-6 text-center text-gray-500">Or, Enter macros manually:</div>
+        <div class="mb-6">
+            <div class="flex space-x-2 mb-2">
+                <input type="text" id="manual-meal-name" placeholder="Enter food name (e.g., 'boiled egg')" class="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="number" id="serving-size-value" placeholder="100" value="1" min="1" class="w-24 px-2 py-3 rounded-lg border border-gray-300 text-center focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select id="serving-size-unit" class="px-2 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="g">g</option>
+                    <option value="ml">ml</option>
+                    <option value="cup">cup</option>
+                    <option value="tbsp">tbsp</option>
+                    <option value="plate">plate (est.)</option>
+                </select>
+            </div>
+            <button id="manual-predict-button" class="w-full mt-2 px-4 py-3 text-white font-semibold bg-blue-600 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200">
+                Get Nutrition Info
+            </button>
+        </div>
+
+        <div id="result-container" class="mt-8 hidden">
+            <h2 class="text-lg font-semibold text-gray-700 mb-4">Prediction Results</h2>
+            <div id="prediction-info" class="bg-gray-100 p-6 rounded-lg shadow-sm">
+                <!-- Results will be displayed here -->
+            </div>
+            <button id="add-to-daily-intake" class="w-full mt-4 px-4 py-3 text-white font-semibold bg-green-600 rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200">
+                Add to Daily Intake
+            </button>
+        </div>
+        
+        <div id="loading-spinner" class="mt-8 text-center hidden">
+            <div class="animate-spin inline-block w-8 h-8 border-[3px] border-current border-t-transparent text-blue-600 rounded-full" role="status" aria-label="loading">
+                <span class="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
+            </div>
+        </div>
+
+        <div id="daily-macros-container" class="mt-8 bg-white p-8 rounded-xl shadow-lg border border-gray-200">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-bold text-gray-800">Daily Macros</h2>
+                <button id="reset-button" class="text-sm text-red-500 hover:text-red-700 font-semibold transition-colors duration-200">Reset</button>
+            </div>
+            <div class="grid grid-cols-2 gap-4 text-center">
+                <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                    <p class="text-gray-500 text-sm font-medium">Calories</p>
+                    <p id="total-calories" class="text-2xl font-bold text-gray-800 mt-1">0.0</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                    <p class="text-gray-500 text-sm font-medium">Protein (g)</p>
+                    <p id="total-protein" class="text-2xl font-bold text-gray-800 mt-1">0.0</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                    <p class="text-gray-500 text-sm font-medium">Fat (g)</p>
+                    <p id="total-fat" class="text-2xl font-bold text-gray-800 mt-1">0.0</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                    <p id="total-carbs" class="text-2xl font-bold text-gray-800 mt-1">0.0</p>
+                    <p class="text-gray-500 text-sm font-medium">Carbs (g)</p>
+                </div>
+            </div>
+        </div>
+        
+        <div id="meal-log-container" class="mt-8 bg-white p-8 rounded-xl shadow-lg border border-gray-200">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-bold text-gray-800">Today's Meals</h2>
+            </div>
+            <div id="meal-log" class="text-gray-700 space-y-2">
+                <!-- Meal entries will be added here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const predictButton = document.getElementById('predict-button');
+        const fileInput = document.getElementById('file-upload');
+        const imagePreview = document.getElementById('image-preview');
+        const dropzone = document.getElementById('dropzone');
+        const dropzoneText = document.getElementById('dropzone-text');
+        const clearButton = document.getElementById('clear-button');
+        const resultContainer = document.getElementById('result-container');
+        const predictionInfo = document.getElementById('prediction-info');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const addToDailyButton = document.getElementById('add-to-daily-intake');
+        const resetButton = document.getElementById('reset-button');
+        const mealLogContainer = document.getElementById('meal-log');
+        const manualMealNameInput = document.getElementById('manual-meal-name');
+        const manualPredictButton = document.getElementById('manual-predict-button');
+        const servingSizeValueInput = document.getElementById('serving-size-value');
+        const servingSizeUnitSelector = document.getElementById('serving-size-unit');
+
+        const totalCalories = document.getElementById('total-calories');
+        const totalProtein = document.getElementById('total-protein');
+        const totalFat = document.getElementById('total-fat');
+        const totalCarbs = document.getElementById('total-carbs');
+        
+        const predictApiUrl = 'http://127.0.0.1:8000/predict';
+        const manualLookupApiUrl = 'http://127.0.0.1:8000/manual-lookup';
+
+        let selectedFile = null;
+        let lastPredictionData = {}; // Stores {name, calories, protein, fat, carbs}
+
+        // Load daily intake from local storage on page load
+        let dailyIntake = JSON.parse(localStorage.getItem('dailyIntake')) || {
+            calories: 0, protein: 0, fat: 0, carbs: 0
+        };
+        let mealLog = JSON.parse(localStorage.getItem('mealLog')) || [];
+
+        function renderDailyMacros() {
+            totalCalories.textContent = dailyIntake.calories.toFixed(1);
+            totalProtein.textContent = dailyIntake.protein.toFixed(1);
+            totalFat.textContent = dailyIntake.fat.toFixed(1);
+            totalCarbs.textContent = dailyIntake.carbs.toFixed(1);
+            localStorage.setItem('dailyIntake', JSON.stringify(dailyIntake));
+        }
+
+        function renderMealLog() {
+            mealLogContainer.innerHTML = '';
+            mealLog.forEach((meal, index) => {
+                const mealItem = document.createElement('div');
+                mealItem.className = 'bg-gray-100 p-4 rounded-lg shadow-sm flex justify-between items-center';
+                const quantity = meal.quantity || 100; 
+                const unit = meal.unit || 'g';
+
+                mealItem.innerHTML = `
+                    <div>
+                        <h4 class="text-md font-semibold text-blue-600">${meal.name.toUpperCase()} (${quantity.toFixed(0)}${unit})</h4>
+                        <p class="text-sm text-gray-500">
+                            ${meal.calories.toFixed(1)} kcal | ${meal.protein.toFixed(1)}g P | ${meal.fat.toFixed(1)}g F | ${meal.carbs.toFixed(1)}g C
+                        </p>
+                    </div>
+                    <button class="bg-red-500 text-white rounded-full p-1 remove-meal-btn" data-index="${index}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                `;
+                mealLogContainer.appendChild(mealItem);
+            });
+
+            mealLogContainer.querySelectorAll('.remove-meal-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const indexToRemove = event.target.closest('button').dataset.index;
+                    removeMealFromLog(indexToRemove);
+                });
+            });
+            localStorage.setItem('mealLog', JSON.stringify(mealLog));
+        }
+        
+        function removeMealFromLog(index) {
+            const mealToRemove = mealLog[index];
+            if (mealToRemove) {
+                dailyIntake.calories -= mealToRemove.calories;
+                dailyIntake.protein -= mealToRemove.protein;
+                dailyIntake.fat -= mealToRemove.fat;
+                dailyIntake.carbs -= mealToRemove.carbs;
+                mealLog.splice(index, 1);
+                
+                renderDailyMacros();
+                renderMealLog();
+            }
+        }
+
+        function handleFileUpload(event) {
+            selectedFile = event.target.files[0];
+            if (selectedFile) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    dropzone.classList.add('has-image');
+                    dropzoneText.classList.add('hidden');
+                    predictButton.disabled = false;
+                    resultContainer.classList.add('hidden');
+                };
+                reader.readAsDataURL(selectedFile);
+            } else {
+                clearImage();
+            }
+        }
+
+        function clearImage(event) {
+            if (event) event.preventDefault();
+            selectedFile = null;
+            fileInput.value = '';
+            imagePreview.src = '';
+            dropzone.classList.remove('has-image');
+            dropzoneText.classList.remove('hidden');
+            predictButton.disabled = true;
+            resultContainer.classList.add('hidden');
+            lastPredictionData = {};
+        }
+
+        /**
+         * Converts the user's unit (g, ml, cup, tbsp, plate) to a single weight in grams.
+         * NOTE: These conversions are ESTIMATES and depend on the food's density.
+         * We assume 1ml = 1g. For cup/spoon/plate, we use general averages for typical food.
+         * @param {number} value - The number entered by the user (e.g., 2 for 'cups').
+         * @param {string} unit - The selected unit ('g', 'ml', 'cup', 'tbsp', 'plate').
+         * @returns {number} The total quantity in grams.
+         */
+        function convertToGrams(value, unit) {
+            // General Conversions (These are rough estimates for dense foods like rice/flour/sugar)
+            const CONVERSION_FACTORS = {
+                'g': 1,      // 1 gram is 1 gram
+                'ml': 1,     // 1 ml is approx 1 gram (for water/liquids)
+                'cup': 150,  // 1 cup is approx 150-250g depending on food. Using 150g for general estimate.
+                'tbsp': 15,  // 1 tablespoon is approx 15g (e.g., sugar/flour)
+                'plate': 400 // A typical dinner plate serving is approx 300-500g. Using 400g as a simple estimate.
+            };
+
+            const factor = CONVERSION_FACTORS[unit] || 1; 
+            return value * factor;
+        }
+
+
+        /**
+         * Scales the 100g base nutritional data to the user's serving size.
+         * @param {object} data - The 100g base macro data.
+         * @param {number} servingSizeInGrams - The quantity in grams to scale to.
+         * @returns {object} The calculated macro data for the serving size.
+         */
+        function scaleMacros(data, servingSizeInGrams) {
+            // Data can be nested (from /predict) or flat (from /manual-lookup)
+            const nutrition = data.nutrition_info || data;
+
+            const caloriesPer100 = nutrition.calories || 0;
+            const proteinPer100 = nutrition.protein || 0;
+            const fatPer100 = nutrition.fat || 0;
+            const carbsPer100 = nutrition.carbs || 0;
+
+            const ratio = servingSizeInGrams / 100;
+            
+            return {
+                name: data.predicted_food || data.name,
+                calories: caloriesPer100 * ratio,
+                protein: proteinPer100 * ratio,
+                fat: fatPer100 * ratio,
+                carbs: carbsPer100 * ratio,
+                quantity: servingSizeInGrams, // Store the actual size used
+                unit: servingSizeUnitSelector.value 
+            };
+        }
+
+        predictButton.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            
+            loadingSpinner.classList.remove('hidden');
+            predictButton.disabled = true;
+            resultContainer.classList.add('hidden');
+
+            try {
+                const response = await fetch(predictApiUrl, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(`HTTP Error: ${response.status} - ${error.detail}`);
+                }
+
+                const result = await response.json();
+                
+                // Store 100g data for later scaling (from nested response)
+                lastPredictionData = {
+                    name: result.predicted_food,
+                    calories: result.nutrition_info.calories,
+                    protein: result.nutrition_info.protein,
+                    fat: result.nutrition_info.fat,
+                    carbs: result.nutrition_info.carbs,
+                };
+                displayResults(lastPredictionData);
+
+            } catch (error) {
+                displayError(error.message);
+            } finally {
+                loadingSpinner.classList.add('hidden');
+                predictButton.disabled = false;
+            }
+        });
+
+        manualPredictButton.addEventListener('click', async () => {
+            const mealName = manualMealNameInput.value.trim();
+            if (!mealName) return;
+            
+            loadingSpinner.classList.remove('hidden');
+            manualPredictButton.disabled = true;
+            resultContainer.classList.add('hidden');
+
+            try {
+                const response = await fetch(manualLookupApiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ food_name: mealName }),
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(`HTTP Error: ${response.status} - ${error.detail}`);
+                }
+                
+                const result = await response.json();
+                
+                // Store 100g data for later scaling
+                lastPredictionData = {
+                    name: mealName,
+                    calories: result.calories,
+                    protein: result.protein,
+                    fat: result.fat,
+                    carbs: result.carbs,
+                };
+                displayResults(lastPredictionData);
+
+            } catch (error) {
+                displayError(error.message);
+            } finally {
+                loadingSpinner.classList.add('hidden');
+                manualPredictButton.disabled = false;
+            }
+        });
+
+        addToDailyButton.addEventListener('click', () => {
+            const servingValue = parseFloat(servingSizeValueInput.value);
+            const selectedUnit = servingSizeUnitSelector.value;
+            const servingSizeInGrams = convertToGrams(servingValue, selectedUnit);
+            
+            if (lastPredictionData && lastPredictionData.name && !isNaN(servingSizeInGrams) && servingSizeInGrams > 0) {
+                // Scale the 100g data to the user-provided serving size
+                const mealToAdd = scaleMacros(lastPredictionData, servingSizeInGrams);
+                
+                // Add to daily intake totals
+                dailyIntake.calories += mealToAdd.calories;
+                dailyIntake.protein += mealToAdd.protein;
+                dailyIntake.fat += mealToAdd.fat;
+                dailyIntake.carbs += mealToAdd.carbs;
+                
+                // Add to meal log
+                mealLog.push(mealToAdd);
+                
+                // Update UI
+                renderDailyMacros();
+                renderMealLog();
+                
+                // Clear the prediction results
+                resultContainer.classList.add('hidden');
+                lastPredictionData = {};
+                manualMealNameInput.value = '';
+                servingSizeValueInput.value = '1'; // Reset quantity value
+                servingSizeUnitSelector.value = 'g'; // Reset unit
+            } else if (isNaN(servingSizeInGrams) || servingSizeInGrams <= 0) {
+                displayError("Please enter a valid serving quantity.");
+            }
+        });
+
+        resetButton.addEventListener('click', () => {
+            if (confirm('Are you sure you want to reset your daily macros and meal log?')) {
+                localStorage.removeItem('dailyIntake');
+                localStorage.removeItem('mealLog');
+                dailyIntake = { calories: 0, protein: 0, fat: 0, carbs: 0 };
+                mealLog = [];
+                renderDailyMacros();
+                renderMealLog();
+            }
+        });
+
+        function displayResults(data) {
+            let htmlContent = '';
+            
+            // Check if data is from image prediction or manual lookup
+            const mealName = data.name || data.predicted_food;
+            const nutrition = data.nutrition_info || data; // Use data directly for manual lookup
+
+            if (mealName) {
+                htmlContent += `<h3 class="text-xl font-bold text-blue-600 mb-2">${mealName.toUpperCase()}</h3>`;
+            }
+
+            // Check if core nutrition data exists and is a number
+            if (nutrition.calories !== undefined && !isNaN(nutrition.calories)) {
+                // Displaying the base 100g info for reference
+                htmlContent += '<h4 class="text-md font-semibold text-gray-600 mt-4 mb-2">Nutrition Info (per 100g)</h4>';
+                htmlContent += '<ul class="list-disc list-inside space-y-1 text-sm text-gray-700">';
+                htmlContent += `<li><strong>Calories:</strong> ${nutrition.calories.toFixed(1)} kcal</li>`;
+                htmlContent += `<li><strong>Protein:</strong> ${nutrition.protein.toFixed(1)}g</li>`;
+                htmlContent += `<li><strong>Fat:</strong> ${nutrition.fat.toFixed(1)}g</li>`;
+                htmlContent += `<li><strong>Carbs:</strong> ${nutrition.carbs.toFixed(1)}g</li>`;
+                htmlContent += '</ul>';
+                htmlContent += '<p class="mt-3 text-sm font-medium text-gray-700">Adjust quantity/unit above to scale intake.</p>';
+            } else {
+                htmlContent += `<p class="text-sm text-gray-500 mt-4">Nutrition data not found. Please try a different query.</p>`;
+            }
+
+            predictionInfo.innerHTML = htmlContent;
+            resultContainer.classList.remove('hidden');
+        }
+
+        function displayError(message) {
+            const htmlContent = `<p class="text-red-500 font-medium">Error: ${message}</p>`;
+            predictionInfo.innerHTML = htmlContent;
+            resultContainer.classList.remove('hidden');
+        }
+        
+        // Initial render
+        renderDailyMacros();
+        renderMealLog();
+
+    </script>
+</body>
+</html>

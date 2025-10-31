@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cycle Results | Your Brand</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* Basic styling similar to dashboard */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 0;
+        }
+        .results-container {
+            max-width: 900px;
+            margin: 40px auto;
+            background-color: #fff;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            padding: 40px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c2c2c;
+            margin-bottom: 30px;
+        }
+        .result-item {
+            background: #e0f0d8;
+            border-left: 6px solid #abc85f;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+        }
+        .image-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .back-btn {
+            display: block;
+            width: 200px;
+            margin: 30px auto 0;
+            text-align: center;
+            padding: 12px 0;
+            background-color: #AE523A;
+            color: #fff;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .back-btn:hover {
+            background-color: #9c4530;
+        }
+    </style>
+</head>
+<body>
+    <div class="results-container">
+        <h1>Your Cycle Results</h1>
+ 
+        <div class="result-item">
+            <strong>Next Period:</strong> {{ next_period }}
+        </div>
+ 
+        <div class="result-item">
+            <strong>Ovulation Day:</strong> {{ ovulation_day }}
+        </div>
+ 
+        <div class="result-item">
+            <strong>Fertile Window:</strong> {{ fertile_window }}
+        </div>
+ 
+        <a href="{{ url_for('cycle_form') }}" class="back-btn">Back to Tracking</a>
+    </div>
+</body>
+</html>

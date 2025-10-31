@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CogniFit - AI Health & Fitness</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <header class="main-header">
+        <div class="logo">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="CogniFit Logo">
+            <span>CogniFit</span>
+        </div>
+        <nav class="main-nav">
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#dashboard">Dashboard</a></li>
+                <li><a href="#how-it-works">How it works</a></li>
+                <li><a href="#blogs">Blogs</a></li>
+            </ul>
+        </nav>
+        <div class="header-actions">
+            <a href="{{ url_for('login') }}" class="btn btn-secondary">Get Started</a>
+        </div>
+        <div class="mobile-menu-toggle">
+            <i class="fas fa-bars"></i>
+        </div>
+    </header>
+
+    <section id="home" class="hero-section">
+        <div class="hero-content fade-in-up">
+            <h1>Transform Your Health with Intelligent Tracking</h1>
+            <p>CogniFit combines AI-powered nutrition analysis with personalized workout plans to help you achieve your fitness goals faster and smarter.</p>
+            <div class="hero-btns">
+                <a href="{{ url_for('login') }}" class="btn btn-secondary">Get Started</a>
+                <a href="#features" class="btn btn-tertiary">Learn More</a>
+            </div>
+        </div>
+        <div class="hero-image">
+            <img src="{{ url_for('static', filename='hero-image.png') }}" alt="Healthy food illustration">
+        </div>
+    </section>
+
+    <section id="features" class="features-section">
+        <h2 class="section-title fade-in">Key Features</h2>
+        <p class="section-subtitle">Everything you need to reach your fitness goals in one place</p>
+        <div class="features-grid container">
+            <div class="feature-item fade-in-left delay-1">
+                <div class="feature-icon">
+                    <i class="fas fa-camera"></i>
+                </div>
+                <h3>AI-Powered Nutrition</h3>
+                <p>Simply snap a picture of your meal and our system provides instant calorie, protein, and macronutrient information.</p>
+            </div>
+            <div class="feature-item fade-in-up delay-2">
+                <div class="feature-icon">
+                    <i class="fas fa-dumbbell"></i>
+                </div>
+                <h3>Personalized Workouts</h3>
+                <p>Receive tailored workout plans and suggestions based on your fitness goals and preferred muscle groups.</p>
+            </div>
+            <div class="feature-item fade-in-right delay-3">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>Real-Time Progress</h3>
+                <p>Visualize your progress with intuitive charts, track your calories, and monitor your fitness journey with ease.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="dashboard" class="dashboard-snapshot">
+        <div class="snapshot-content container">
+            <div class="snapshot-text fade-in-left">
+                <small>YOUR PROGRESS AT A GLANCE</small>
+                <h2 class="section-title-left">See Your Journey Unfold</h2>
+                <p>Our interactive dashboard gives you a clear and intuitive overview of your progress, helping you stay motivated and on track with your goals.</p>
+                <ul>
+                    <li><i class="fas fa-check-circle"></i> Daily calorie & protein counts</li>
+                    <li><i class="fas fa-check-circle"></i> Workout and activity logs</li>
+                    <li><i class="fas fa-check-circle"></i> Weekly and monthly reports</li>
+                    <li><i class="fas fa-check-circle"></i> Progress towards your rewards</li>
+                </ul>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Try Dashboard</a>
+            </div>
+            <div class="snapshot-visual fade-in-right">
+                <div class="graph-card">
+                    <h3>Daily Calorie Intake</h3>
+                    <canvas id="myChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-it-works" class="how-it-works-section">
+        <h2 class="section-title fade-in">How It Works</h2>
+        <p class="section-subtitle">Getting started with CogniFit is simple and straightforward</p>
+        <div class="zigzag-container container">
+            <div class="zigzag-item fade-in-up">
+                <div class="zigzag-content">
+                    <div class="step-header">
+                        <div class="step-number">1</div>
+                        <h3>Sign Up & Analyze</h3>
+                    </div>
+                    <p>Create your profile and let our initial analysis guide you to the perfect plan tailored to your needs.</p>
+                </div>
+                <div class="zigzag-image">
+                    <img src="{{ url_for('static', filename='signup.png') }}" alt="Sign up and analysis illustration">
+                </div>
+            </div>
+            <div class="zigzag-item fade-in-up">
+                <div class="zigzag-image">
+                    <img src="{{ url_for('static', filename='snap.png') }}" alt="Meal snap illustration">
+                </div>
+                <div class="zigzag-content">
+                    <div class="step-header">
+                        <div class="step-number">2</div>
+                        <h3>Snap a Meal</h3>
+                    </div>
+                    <p>Use our AI-powered snap feature to log your food and get instant nutritional insights.</p>
+                </div>
+            </div>
+            <div class="zigzag-item fade-in-up">
+                <div class="zigzag-content">
+                    <div class="step-header">
+                        <div class="step-number">3</div>
+                        <h3>Track Progress</h3>
+                    </div>
+                    <p>Follow your personalized plan, track your workouts, and watch your progress unfold with intuitive charts.</p>
+                </div>
+                <div class="zigzag-image">
+                    <img src="{{ url_for('static', filename='progress.png') }}" alt="Progress tracking illustration">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <div class="container fade-in-up">
+            <h2>Ready to start your transformation?</h2>
+            <p>Join thousands of users who are achieving their fitness goals with CogniFit.</p>
+            <a href="{{ url_for('login') }}" class="btn btn-secondary">Get Started</a>
+        </div>
+    </section>
+
+    <footer class="main-footer">
+        <div class="footer-content container">
+            <div class="footer-brand">
+                <div class="footer-logo">
+                    <img src="{{ url_for('static', filename='logo.png') }}" alt="CogniFit Logo">
+                    <span>CogniFit</span>
+                </div>
+                <p>Transforming health and fitness through AI-powered insights and personalized plans.</p>
+            </div>
+            <div class="footer-links">
+                <h4>Product</h4>
+                <ul>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#dashboard">Dashboard</a></li>
+                    <li><a href="#how-it-works">How it Works</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Contact</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="#blogs">Blog</a></li>
+                    <li><a href="#">Support</a></li>
+                    <li><a href="#">FAQ</a></li>
+                </ul>
+            </div>
+        </div>
+        <p class="copyright">&copy; 2025 CogniFit. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href').substring(1);
+                const targetElement = document.getElementById(targetId);
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 70,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        const animatedElements = document.querySelectorAll('.fade-in, .fade-in-up, .fade-in-left, .fade-in-right');
+        const observerOptions = {
+            root: null,
+            threshold: 0.2,
+            rootMargin: '0px'
+        };
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+        animatedElements.forEach(el => observer.observe(el));
+
+        const ctx = document.getElementById('myChart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Calories Consumed', 'Calories Remaining'],
+                    datasets: [{
+                        label: 'Calorie Tracker',
+                        data: [1200, 800],
+                        backgroundColor: [
+                            '#AE523A',
+                            '#D3D3D3'
+                        ],
+                        borderColor: [
+                            '#fff',
+                            '#fff'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    size: 14,
+                                    family: 'Poppins'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += context.parsed + ' kcal';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        const menuToggle = document.querySelector('.mobile-menu-toggle');
+        const mainNav = document.querySelector('.main-nav');
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                mainNav.classList.toggle('active');
+                menuToggle.classList.toggle('active');
+            });
+        }
+    </script>
+</body>
+</html>
