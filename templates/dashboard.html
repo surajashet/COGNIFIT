@@ -36,21 +36,29 @@
  
         <!-- Sidebar -->
         <aside class="sidebar">
+
+    
+</a>
     <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.path == '/dashboard' %}active{% endif %}">
         <i class="fas fa-home"></i>
         <span>Dashboard</span>
     </a>
 
-    <a href="#" class="nav-item {% if request.path == '/progress' %}active{% endif %}" onclick="alert('Progress page coming soon!')">
+ <a href="{{ url_for('workout') }}" class="nav-item {% if request.path == '/workout' %}active{% endif %}">
+                <i class="fas fa-dumbbell"></i>
+                <span>Workout</span>
+            </a>
+    </a>
+    <a href="{{ url_for('progress') }}" class="nav-item {% if request.path == '/progress' %}active{% endif %}">
         <i class="fas fa-chart-line"></i>
         <span>Progress</span>
     </a>
-
     <a href="{{ url_for('recipes') }}" class="nav-item {% if request.path == '/recipes' %}active{% endif %}">
         <i class="fas fa-utensils"></i>
         <span>Recipes</span>
     </a>
-
+    
+  
     <a href="{{ url_for('cycle_form') }}" class="nav-item {% if request.path == '/cycle' %}active{% endif %}">
         <i class="fas fa-female"></i>
         <span>Cycle Tracking</span>

@@ -331,6 +331,14 @@ def get_bmi_category(bmi):
 # -------------------------
 # Routes
 # -------------------------
+@app.route('/workout')
+def workout():
+    return render_template('workout.html')
+
+@app.route('/progress')
+def progress():
+    return render_template('progress.html')
+
 
 @app.route('/')
 def home():

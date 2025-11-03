@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress | Cognifit</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="logo">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="CogniFit Logo">
+            </div>
+           
+            <div class="user-menu">
+                {% if session.get('user_id') %}
+                    <div class="user-profile">
+                        <div class="avatar">{{ session.get('username')[0]|upper }}</div>
+                        <span>{{ session.get('username') }}</span>
+                    </div>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-primary" style="margin-right:10px;">Login</a>
+                    <a href="{{ url_for('signup') }}" class="btn btn-primary">Signup</a>
+                {% endif %}
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.path == '/dashboard' %}active{% endif %}">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ url_for('workout') }}" class="nav-item {% if request.path == '/workout' %}active{% endif %}">
+                <i class="fas fa-dumbbell"></i>
+                <span>Workout</span>
+            </a>
+            <a href="{{ url_for('progress') }}" class="nav-item {% if request.path == '/progress' %}active{% endif %}">
+                <i class="fas fa-chart-line"></i>
+                <span>Progress</span>
+            </a>
+            <a href="{{ url_for('recipes') }}" class="nav-item {% if request.path == '/recipes' %}active{% endif %}">
+                <i class="fas fa-utensils"></i>
+                <span>Recipes</span>
+            </a>
+            <a href="{{ url_for('cycle_form') }}" class="nav-item {% if request.path == '/cycle' %}active{% endif %}">
+                <i class="fas fa-female"></i>
+                <span>Cycle Tracking</span>
+            </a>
+            <a href="{{ url_for('blogs') }}" class="nav-item {% if request.path == '/blogs' %}active{% endif %}">
+                <i class="fas fa-newspaper"></i>
+                <span>Blogs</span>
+            </a>
+            <a href="{{ url_for('calendar') }}" class="nav-item {% if request.path == url_for('calendar') %}active{% endif %}">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Calendar</span>
+            </a>
+           <a href="{{ url_for('snap') }}" class="nav-item {% if request.path == url_for('snap') %}active{% endif %}">
+    <i class="fas fa-camera"></i>
+    <span>Snap</span>
+</a>
+
+            <a href="{{ url_for('settings') }}" class="nav-item {% if request.path == url_for('settings') %}active{% endif %}">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+            <a href="{{ url_for('logout') }}" class="nav-item">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="dashboard-content">
+            <!-- Welcome Banner -->
+            <div class="welcome-banner">
+                <div class="welcome-text">
+                    <h2>Your Progress, {{ user_name }}! 📈</h2>
+                    <p>Track your fitness journey and celebrate your achievements</p>
+                </div>
+                <div class="date-display">
+                    <i class="fas fa-calendar"></i>
+                    <span id="current-date"></span>
+                </div>
+            </div>
+
+            <!-- Time Range Filter -->
+            <div class="time-filter-section">
+                <div class="time-filter-card">
+                    <div class="filter-header">
+                        <i class="fas fa-filter"></i>
+                        <h3>View Progress By</h3>
+                    </div>
+                    <div class="filter-options">
+                        <div class="btn-group">
+                            <button class="btn-filter active" data-range="7">Last 7 Days</button>
+                            <button class="btn-filter" data-range="30">Last 30 Days</button>
+                            <button class="btn-filter" data-range="90">Last 3 Months</button>
+                            <button class="btn-filter" data-range="365">Last Year</button>
+                            <button class="btn-filter" data-range="all">All Time</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="loading-spinner" class="loading-container">
+                <div class="spinner"></div>
+                <p>Loading your progress data...</p>
+            </div>
+
+            <!-- Progress Stats Section -->
+            <div id="content-area" style="display: none;">
+                <!-- Charts Section -->
+                <div class="charts-section">
+                    <!-- Workout Activity Chart -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">
+                                <i class="fas fa-running me-2"></i>Workout Activity
+                            </div>
+                            <p class="chart-subtitle">Duration and calories burned over time</p>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="workoutChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Workout Frequency Chart -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">
+                                <i class="fas fa-calendar-check me-2"></i>Workout Frequency
+                            </div>
+                            <p class="chart-subtitle">Workouts per week/month</p>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="frequencyChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <style>
+        /* Loading Spinner */
+        .loading-container {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Time Filter Section */
+        .time-filter-section {
+            margin-bottom: 25px;
+        }
+
+        .time-filter-card {
+            background: var(--text-light);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .filter-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .filter-header i {
+            color: var(--primary-color);
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        .filter-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: var(--text-dark);
+        }
+
+        .filter-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .btn-filter {
+            padding: 8px 16px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .btn-filter:hover {
+            background: #e9ecef;
+        }
+
+        .btn-filter.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* Progress-specific styles */
+        .chart-card {
+            background: var(--text-light);
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            margin-bottom: 25px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .chart-header {
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+        }
+
+        .chart-subtitle {
+            color: #666;
+            font-size: 0.9rem;
+            margin: 5px 0 0 0;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+            width: 100%;
+        }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-options {
+                flex-direction: column;
+            }
+            
+            .btn-filter {
+                text-align: center;
+            }
+            
+            .chart-container {
+                height: 300px;
+            }
+        }
+    </style>
+
+    <script>
+        // Global variables
+        let currentTimeRange = 7;
+        let workoutChart;
+        let frequencyChart;
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current date
+            const now = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', options);
+
+            // Set up filter button event listeners
+            document.querySelectorAll('.btn-filter').forEach(button => {
+                button.addEventListener('click', function() {
+                    // Update active button state
+                    document.querySelectorAll('.btn-filter').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    // Update time range and reload data
+                    currentTimeRange = this.dataset.range;
+                    loadProgressData();
+                });
+            });
+
+            // Load initial progress data
+            loadProgressData();
+        });
+
+        async function loadProgressData() {
+            try {
+                // Show loading spinner
+                document.getElementById('loading-spinner').style.display = 'block';
+                document.getElementById('content-area').style.display = 'none';
+
+                // Fetch data from your Flask backend with time range parameter
+                const response = await fetch(`/api/progress/summary?range=${currentTimeRange}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+
+                // Hide loading spinner and show content
+                document.getElementById('loading-spinner').style.display = 'none';
+                document.getElementById('content-area').style.display = 'block';
+
+                createCharts(data.chart_data);
+            } catch (error) {
+                console.error('Error loading progress data:', error);
+                document.getElementById('loading-spinner').innerHTML = 
+                    '<div class="alert alert-danger">Error loading data. Please try again.</div>';
+            }
+        }
+
+        function createCharts(data) {
+            createWorkoutChart(data);
+            createFrequencyChart(data);
+        }
+
+        function createWorkoutChart(data) {
+            const ctx = document.getElementById('workoutChart').getContext('2d');
+            
+            if (workoutChart) {
+                workoutChart.destroy();
+            }
+
+            // Check if we have workout data
+            if (!data.workout_data || data.workout_data.length === 0) {
+                document.getElementById('workoutChart').innerHTML = 
+                    '<div class="text-center p-4"><p>No workout data available. Start logging your workouts to see your progress!</p></div>';
+                return;
+            }
+
+            console.log('Workout data:', data.workout_data); // Debug log
+
+            // Format dates based on time range
+            const dates = data.workout_data.map(item => {
+                const date = new Date(item.workout_date);
+                
+                if (currentTimeRange === '7') {
+                    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                } else if (currentTimeRange === '30') {
+                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                } else if (currentTimeRange === '90' || currentTimeRange === '365') {
+                    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                } else {
+                    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                }
+            });
+
+            const durations = data.workout_data.map(item => item.duration_minutes || 0);
+            const calories = data.workout_data.map(item => item.calories_burned || 0);
+
+            workoutChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: 'Workout Duration (min)',
+                            data: durations,
+                            backgroundColor: 'rgba(171, 200, 95, 0.8)',
+                            borderColor: 'rgba(171, 200, 95, 1)',
+                            borderWidth: 2,
+                            borderRadius: 4,
+                            barPercentage: 0.7,
+                        },
+                        {
+                            label: 'Calories Burned',
+                            data: calories,
+                            backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 2,
+                            type: 'line',
+                            yAxisID: 'y1',
+                            tension: 0.4,
+                            pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Duration (minutes)',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            }
+                        },
+                        y1: {
+                            beginAtZero: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Calories Burned',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: 'rgba(255, 255, 255, 0.2)',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        if (label.includes('Calories')) {
+                                            label += context.parsed.y.toLocaleString() + ' cal';
+                                        } else {
+                                            label += context.parsed.y + ' min';
+                                        }
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createFrequencyChart(data) {
+            const ctx = document.getElementById('frequencyChart').getContext('2d');
+            
+            if (frequencyChart) {
+                frequencyChart.destroy();
+            }
+
+            // Check if we have frequency data
+            if (!data.frequency_data || data.frequency_data.length === 0) {
+                document.getElementById('frequencyChart').innerHTML = 
+                    '<div class="text-center p-4"><p>No frequency data available. Workout data will appear here once you have multiple workouts.</p></div>';
+                return;
+            }
+
+            console.log('Frequency data:', data.frequency_data); // Debug log
+
+            // Format labels based on time range
+            const labels = data.frequency_data.map(item => {
+                if (currentTimeRange === '7') {
+                    return `Day ${item.period}`;
+                } else if (currentTimeRange === '30') {
+                    return `Week ${item.period}`;
+                } else if (currentTimeRange === '90') {
+                    return `Month ${item.period}`;
+                } else {
+                    return item.period;
+                }
+            });
+
+            const workoutCounts = data.frequency_data.map(item => item.workout_count || 0);
+
+            frequencyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Workouts',
+                            data: workoutCounts,
+                            backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 2,
+                            borderRadius: 4,
+                            barPercentage: 0.7,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Workouts',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: 'rgba(255, 255, 255, 0.2)',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function(context) {
+                                    return `Workouts: ${context.parsed.y}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
