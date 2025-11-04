@@ -205,58 +205,7 @@
             </div>
  
             <!-- Charts Section - Empty States -->
-            <div class="charts-section">
-                <div class="chart-card empty-state">
-                    <div class="chart-header">
-                        <div class="chart-title">Activity Tracking</div>
-                    </div>
-                    <div class="empty-chart-container">
-                        <div class="empty-chart-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <h3>No Activity Data Yet</h3>
-                        <p>Start logging your workouts to see your progress here</p>
-                        <button class="btn btn-secondary" onclick="alert('Workout logging coming soon!')">
-                            Log First Workout
-                        </button>
-                    </div>
-                </div>
-               
-                <div class="chart-card empty-state">
-                    <div class="chart-header">
-                        <div class="chart-title">Nutrition Overview</div>
-                    </div>
-                    <div class="empty-chart-container">
-                        <div class="empty-chart-icon">
-                            <i class="fas fa-apple-alt"></i>
-                        </div>
-                        <h3>No Nutrition Data</h3>
-                        <p>Track your meals to see macro breakdown and insights</p>
-                        <button class="btn btn-secondary" onclick="alert('Meal tracking coming soon!')">
-                            Track First Meal
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Weekly Motivation -->
-            <div class="motivation-section">
-                <div class="motivation-card">
-                    <div class="motivation-header">
-                        <i class="fas fa-star"></i>
-                        <h3>Weekly Focus</h3>
-                    </div>
-                    <p id="weekly-focus">"This week, focus on consistency over intensity. Small, daily efforts lead to lasting results."</p>
-                </div>
-                
-                <div class="motivation-card">
-                    <div class="motivation-header">
-                        <i class="fas fa-heart"></i>
-                        <h3>Health Tip</h3>
-                    </div>
-                    <p id="health-tip">Remember to stay hydrated! Drinking enough water supports both physical and mental performance.</p>
-                </div>
-            </div>
+            
         </main>
     </div>
 
@@ -605,32 +554,30 @@
     }
 
     // Function to update all inspirational content with smooth transition
-    function updateInspirationalContent() {
-        // Fade out
-        const elements = [
-            document.getElementById('affirmation-text'),
-            document.getElementById('daily-affirmation'),
-            document.getElementById('weekly-focus'),
-            document.getElementById('health-tip')
-        ];
-        
-        elements.forEach(element => {
-            if (element) element.style.opacity = '0';
-        });
+    // Function to update affirmations and daily message smoothly
+function updateInspirationalContent() {
+    const affirmationEl = document.getElementById('affirmation-text');
+    const dailyEl = document.getElementById('daily-affirmation');
 
-        // Update content after fade out
-        setTimeout(() => {
-            document.getElementById('affirmation-text').textContent = `"${getRandomItem(affirmations)}"`;
-            document.getElementById('daily-affirmation').textContent = getRandomItem(dailyMotivations);
-            document.getElementById('weekly-focus').textContent = `"${getRandomItem(weeklyFocuses)}"`;
-            document.getElementById('health-tip').textContent = getRandomItem(healthTips);
-            
-            // Fade in
-            elements.forEach(element => {
-                if (element) element.style.opacity = '1';
-            });
-        }, 500);
-    }
+    // Smooth fade-out
+    [affirmationEl, dailyEl].forEach(el => {
+        if (el) el.style.opacity = '0';
+    });
+
+    // Change text after fade
+    setTimeout(() => {
+        if (affirmationEl)
+            affirmationEl.textContent = `"${getRandomItem(affirmations)}"`;
+        if (dailyEl)
+            dailyEl.textContent = getRandomItem(dailyMotivations);
+
+        // Fade back in
+        [affirmationEl, dailyEl].forEach(el => {
+            if (el) el.style.opacity = '1';
+        });
+    }, 500);
+}
+
 
     // Initialize content
     updateInspirationalContent();
@@ -661,4 +608,4 @@
            
        
 </body>
-</html>
+</html> 

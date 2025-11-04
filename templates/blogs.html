@@ -609,11 +609,11 @@
 </a>
 
             </a>
-            <a href="#" class="nav-item">
+            <a href="{{ url_for('progress') }}" class="nav-item {% if request.path == '/progress' %}active{% endif %}" >
                 <i class="fas fa-chart-line"></i>
                 <span>Progress</span>
             </a>
-            <a href="#" class="nav-item">
+             <a href="{{ url_for('recipes') }}" class="nav-item {% if request.path == '/recipes' %}active{% endif %}">
                 <i class="fas fa-utensils"></i>
                 <span>Recipes</span>
             </a>

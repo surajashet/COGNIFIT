@@ -416,7 +416,7 @@
     <span>Workout</span>
 </a>
 
-            <a href="#" class="nav-item {% if request.path == '/progress' %}active{% endif %}" onclick="alert('Progress page coming soon!')">
+            <a href="{{ url_for('progress') }}" class="nav-item {% if request.path == '/progress' %}active{% endif %}" >
                 <i class="fas fa-chart-line"></i>
                 <span>Progress</span>
             </a>
