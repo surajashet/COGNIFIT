@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workout Tracking | Cognifit</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="logo">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="CogniFit Logo">
+            </div>
+           
+            <div class="user-menu">
+                {% if session.get('user_id') %}
+                    <div class="user-profile">
+                        <div class="avatar">{{ session.get('username')[0]|upper }}</div>
+                        <span>{{ session.get('username') }}</span>
+                    </div>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-primary" style="margin-right:10px;">Login</a>
+                    <a href="{{ url_for('signup') }}" class="btn btn-primary">Signup</a>
+                {% endif %}
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.path == '/dashboard' %}active{% endif %}">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="{{ url_for('workout') }}" class="nav-item {% if request.path == '/workout' %}active{% endif %}">
+                <i class="fas fa-dumbbell"></i>
+                <span>Workout</span>
+            </a>
+
+            <a href="{{ url_for('progress') }}" class="nav-item {% if request.path == '/progress' %}active{% endif %}">
+                <i class="fas fa-chart-line"></i>
+                <span>Progress</span>
+            </a>
+
+            <a href="{{ url_for('recipes') }}" class="nav-item {% if request.path == '/recipes' %}active{% endif %}">
+                <i class="fas fa-utensils"></i>
+                <span>Recipes</span>
+            </a>
+
+            <a href="{{ url_for('cycle_form') }}" class="nav-item {% if request.path == '/cycle' %}active{% endif %}">
+                <i class="fas fa-female"></i>
+                <span>Cycle Tracking</span>
+            </a>
+
+            <a href="{{ url_for('blogs') }}" class="nav-item {% if request.path == '/blogs' %}active{% endif %}">
+                <i class="fas fa-newspaper"></i>
+                <span>Blogs</span>
+            </a>
+
+            <a href="{{ url_for('calendar') }}" class="nav-item {% if request.path == url_for('calendar') %}active{% endif %}">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Calendar</span>
+            </a>
+
+           <a href="{{ url_for('snap') }}" class="nav-item {% if request.path == url_for('snap') %}active{% endif %}">
+    <i class="fas fa-camera"></i>
+    <span>Snap</span>
+</a>
+
+
+            <a href="{{ url_for('settings') }}" class="nav-item {% if request.path == url_for('settings') %}active{% endif %}">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+
+            <a href="{{ url_for('logout') }}" class="nav-item">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="dashboard-content">
+            <!-- Welcome Banner -->
+            <div class="welcome-banner">
+                <div class="welcome-text">
+                    <h2>Workout Tracking 💪</h2>
+                    <p>Log your exercises and track your fitness progress</p>
+                </div>
+                <div class="date-display">
+                    <i class="fas fa-calendar"></i>
+                    <span id="current-date"></span>
+                </div>
+            </div>
+
+            <!-- Workout Content -->
+            <div class="workout-content">
+                <!-- Workout Form Section -->
+                <div class="workout-form-section">
+                    <div class="workout-card">
+                        <div class="workout-card-header">
+                            <h3 class="workout-card-title">
+                                <i class="fas fa-running"></i>
+                                Log New Workout
+                            </h3>
+                        </div>
+                        
+                        <form id="workout-form" class="workout-form">
+                            <div class="form-group">
+                                <label for="workout-type">Workout Type</label>
+                                <select id="workout-type" class="form-control" required>
+                                    <option value="">Select workout type</option>
+                                    <option value="running">Running</option>
+                                    <option value="cycling">Cycling</option>
+                                    <option value="swimming">Swimming</option>
+                                    <option value="weight-training">Weight Training</option>
+                                    <option value="yoga">Yoga</option>
+                                    <option value="hiit">HIIT</option>
+                                    <option value="walking">Walking</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="workout-date">Date</label>
+                                    <input type="date" id="workout-date" class="form-control" required>
+                                    <small class="date-help" style="display: block; margin-top: 5px; color: #666; font-size: 0.85rem;">
+                                        <i class="fas fa-info-circle"></i> You can only log workouts for today or past dates
+                                    </small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="duration">Duration (minutes)</label>
+                                    <input type="number" id="duration" class="form-control" min="1" max="300" placeholder="e.g., 45" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="intensity">Intensity Level</label>
+                                <select id="intensity" class="form-control" required>
+                                    <option value="light">Light</option>
+                                    <option value="moderate" selected>Moderate</option>
+                                    <option value="vigorous">Vigorous</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="notes">Workout Notes (Optional)</label>
+                                <textarea id="notes" class="form-control" rows="3" placeholder="How did it feel? Any achievements?"></textarea>
+                            </div>
+                            
+                            <div class="calories-preview">
+                                <div class="calories-estimate">
+                                    <span class="calories-label">Estimated Calories Burned:</span>
+                                    <span class="calories-value" id="calories-estimate">0</span>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fas fa-save"></i> Save Workout
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Workout Stats Section -->
+                <div class="workout-stats-section">
+                    <!-- Statistics -->
+                    <div class="workout-card">
+                        <div class="workout-card-header">
+                            <h3 class="workout-card-title">
+                                <i class="fas fa-chart-line"></i>
+                                Workout Analytics
+                            </h3>
+                        </div>
+                        
+                        <div class="chart-container">
+                            <canvas id="workoutChart"></canvas>
+                        </div>
+                        
+                        <div class="stats-summary">
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <i class="fas fa-fire"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <label>Total Calories</label>
+                                    <span class="stat-value" id="total-calories">0</span>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <label>Total Minutes</label>
+                                    <span class="stat-value" id="total-minutes">0</span>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <i class="fas fa-dumbbell"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <label>Workouts</label>
+                                    <span class="stat-value" id="total-workouts">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Workout History -->
+                    <div class="workout-card">
+                        <div class="workout-card-header">
+                            <h3 class="workout-card-title">
+                                <i class="fas fa-history"></i>
+                                Recent Workouts
+                            </h3>
+                        </div>
+                        
+                        <div class="workout-history" id="workout-history">
+                            <!-- Workouts will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <style>
+        /* Workout Specific Styles */
+        .workout-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 968px) {
+            .workout-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .workout-card {
+            background: var(--text-light);
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            margin-bottom: 25px;
+        }
+
+        .workout-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .workout-card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+        }
+
+        .workout-form {
+            margin-top: 10px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(171, 200, 95, 0.2);
+        }
+
+        .form-control.invalid {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .btn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+        }
+
+        /* Calories Preview */
+        .calories-preview {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .calories-estimate {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .calories-label {
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .calories-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        /* Chart Container */
+        .chart-container {
+            height: 250px;
+            margin-bottom: 20px;
+        }
+
+        /* Stats Summary */
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .stat-content {
+            flex: 1;
+        }
+
+        .stat-content label {
+            display: block;
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            display: block;
+        }
+
+        /* Workout History */
+        .workout-history {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+        }
+
+        .history-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .history-main {
+            flex: 1;
+        }
+
+        .history-type {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 5px;
+        }
+
+        .history-details {
+            display: flex;
+            gap: 15px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .history-calories {
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .delete-btn {
+            color: #e53e3e;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        .delete-btn:hover {
+            background-color: rgba(229, 62, 62, 0.1);
+            transform: scale(1.1);
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            text-align: center;
+            color: #666;
+        }
+
+        .empty-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(171, 200, 95, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            font-size: 32px;
+            color: var(--primary-color);
+        }
+
+        .empty-state h4 {
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+
+        .empty-state p {
+            margin-bottom: 20px;
+            max-width: 250px;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+        }
+
+        .toast {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border-left: 4px solid var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            max-width: 350px;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast.hide {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+
+        .toast.success {
+            border-left-color: #10b981;
+        }
+
+        .toast.error {
+            border-left-color: #ef4444;
+        }
+
+        .toast.warning {
+            border-left-color: #f59e0b;
+        }
+
+        .toast.info {
+            border-left-color: #3b82f6;
+        }
+
+        .toast-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .toast.success .toast-icon {
+            background: #10b981;
+        }
+
+        .toast.error .toast-icon {
+            background: #ef4444;
+        }
+
+        .toast.warning .toast-icon {
+            background: #f59e0b;
+        }
+
+        .toast.info .toast-icon {
+            background: #3b82f6;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-dark);
+            margin-bottom: 4px;
+        }
+
+        .toast-message {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .toast-close:hover {
+            color: #6b7280;
+            background: #f3f4f6;
+        }
+
+        /* Confirmation Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .modal-overlay.show .modal {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-icon {
+            width: 60px;
+            height: 60px;
+            background: #fee2e2;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 24px;
+            color: #dc2626;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .modal-message {
+            color: #666;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-btn.cancel {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .modal-btn.cancel:hover {
+            background: #e5e7eb;
+        }
+
+        .modal-btn.confirm {
+            background: #dc2626;
+            color: white;
+        }
+
+        .modal-btn.confirm:hover {
+            background: #b91c1c;
+        }
+
+        /* Date Help Text */
+        .date-help {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 5px;
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        .date-help i {
+            color: var(--primary-color);
+        }
+    </style>
+
+    <script>
+        // MET values for different workout types (calories burned per kg per hour)
+        const MET_VALUES = {
+            'running': 9.8,
+            'cycling': 7.5,
+            'swimming': 8.0,
+            'weight-training': 6.0,
+            'yoga': 3.0,
+            'hiit': 8.5,
+            'walking': 4.0
+        };
+
+        // Intensity multipliers
+        const INTENSITY_MULTIPLIERS = {
+            'light': 0.8,
+            'moderate': 1.0,
+            'vigorous': 1.3
+        };
+
+        // Initialize charts and data
+        let workoutChart;
+
+        // DOM Elements
+        const workoutForm = document.getElementById('workout-form');
+        const caloriesEstimate = document.getElementById('calories-estimate');
+        const workoutHistory = document.getElementById('workout-history');
+        const totalCalories = document.getElementById('total-calories');
+        const totalMinutes = document.getElementById('total-minutes');
+        const totalWorkouts = document.getElementById('total-workouts');
+        const workoutDateInput = document.getElementById('workout-date');
+
+        // Set today's date as default and restrict future dates
+        function initializeDateRestrictions() {
+            const today = new Date();
+            const todayFormatted = today.toISOString().split('T')[0];
+            
+            // Set max attribute to today
+            workoutDateInput.setAttribute('max', todayFormatted);
+            
+            // Set default value to today
+            workoutDateInput.value = todayFormatted;
+            
+            console.log('Date restrictions set - max date:', todayFormatted);
+        }
+
+        // Validate date on form submission
+        function validateDate(dateString) {
+            const selectedDate = new Date(dateString);
+            const today = new Date();
+            
+            // Reset time parts to compare only dates
+            selectedDate.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
+            
+            return selectedDate <= today;
+        }
+
+        // Handle date input changes
+        function handleDateChange() {
+            const selectedDate = new Date(workoutDateInput.value);
+            const today = new Date();
+            
+            // Reset time parts to compare only dates
+            selectedDate.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
+            
+            if (selectedDate > today) {
+                // Show error and reset to today
+                showToast('error', 'Invalid Date', 'You can only log workouts for today or past dates');
+                workoutDateInput.classList.add('invalid');
+                workoutDateInput.value = today.toISOString().split('T')[0];
+            } else {
+                workoutDateInput.classList.remove('invalid');
+            }
+        }
+
+        // Set current date in welcome banner
+        const now = new Date();
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', options);
+
+        // Toast Notification System
+        function showToast(type, title, message, duration = 4000) {
+            const toastContainer = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                success: 'fas fa-check',
+                error: 'fas fa-exclamation-circle',
+                warning: 'fas fa-exclamation-triangle',
+                info: 'fas fa-info-circle'
+            };
+
+            toast.innerHTML = `
+                <div class="toast-icon">
+                    <i class="${icons[type]}"></i>
+                </div>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+
+            toastContainer.appendChild(toast);
+
+            // Show toast with animation
+            setTimeout(() => toast.classList.add('show'), 100);
+
+            // Auto remove after duration
+            if (duration > 0) {
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    toast.classList.add('hide');
+                    setTimeout(() => toast.remove(), 400);
+                }, duration);
+            }
+
+            return toast;
+        }
+
+        // Confirmation Modal System
+        function showConfirmation(message, onConfirm) {
+            const modalHTML = `
+                <div class="modal-overlay" id="confirmation-modal">
+                    <div class="modal">
+                        <div class="modal-header">
+                            <div class="modal-icon">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <h3 class="modal-title">Confirm Action</h3>
+                            <p class="modal-message">${message}</p>
+                        </div>
+                        <div class="modal-actions">
+                            <button class="modal-btn cancel" onclick="hideConfirmation()">Cancel</button>
+                            <button class="modal-btn confirm" onclick="confirmAction()">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            const modal = document.getElementById('confirmation-modal');
+            
+            setTimeout(() => modal.classList.add('show'), 10);
+
+            window.confirmAction = function() {
+                onConfirm();
+                hideConfirmation();
+            };
+
+            window.hideConfirmation = function() {
+                modal.classList.remove('show');
+                setTimeout(() => modal.remove(), 300);
+            };
+        }
+
+        // Calculate calories based on workout type, duration, and intensity
+        function calculateCalories(workoutType, duration, intensity) {
+            console.log('Calculating calories for:', { workoutType, duration, intensity });
+            
+            const weight = 70; // Assume average weight of 70kg
+            const metValue = MET_VALUES[workoutType] || 5.0;
+            const intensityMultiplier = INTENSITY_MULTIPLIERS[intensity] || 1.0;
+            
+            // Calories = MET * weight(kg) * time(hours) * intensity multiplier
+            const calories = metValue * weight * (duration / 60) * intensityMultiplier;
+            const roundedCalories = Math.round(calories);
+            
+            console.log('Calculated calories:', roundedCalories);
+            return roundedCalories;
+        }
+
+        // Update calories estimate in real-time
+        function updateCaloriesEstimate() {
+            const workoutType = document.getElementById('workout-type').value;
+            const duration = parseInt(document.getElementById('duration').value) || 0;
+            const intensity = document.getElementById('intensity').value;
+
+            console.log('Updating estimate:', { workoutType, duration, intensity });
+
+            if (workoutType && duration > 0) {
+                const calories = calculateCalories(workoutType, duration, intensity);
+                caloriesEstimate.textContent = calories;
+                console.log('Updated estimate to:', calories);
+            } else {
+                caloriesEstimate.textContent = '0';
+            }
+        }
+
+        // Add event listeners for real-time calculation
+        document.getElementById('workout-type').addEventListener('change', updateCaloriesEstimate);
+        document.getElementById('duration').addEventListener('input', updateCaloriesEstimate);
+        document.getElementById('intensity').addEventListener('change', updateCaloriesEstimate);
+
+        // Add event listener for date validation
+        workoutDateInput.addEventListener('change', handleDateChange);
+
+        // Load workouts from database
+        async function loadWorkouts() {
+            try {
+                console.log('Loading workouts from API...');
+                const response = await fetch('/api/workouts');
+                const data = await response.json();
+                
+                console.log('Workouts API response:', data);
+                
+                if (data.success) {
+                    updateWorkoutHistory(data.workouts);
+                    updateStats(data.workouts);
+                    updateChart(data.workouts);
+                } else {
+                    console.error('Error loading workouts:', data.message);
+                    showEmptyState();
+                }
+            } catch (error) {
+                console.error('Error loading workouts:', error);
+                showEmptyState();
+            }
+        }
+
+        // Load workout statistics
+        async function loadWorkoutStats() {
+            try {
+                console.log('Loading workout stats...');
+                const response = await fetch('/api/workouts/stats');
+                const data = await response.json();
+                
+                console.log('Stats API response:', data);
+                
+                if (data.success) {
+                    updateStatsDisplay(data.stats);
+                }
+            } catch (error) {
+                console.error('Error loading workout stats:', error);
+            }
+        }
+
+        // Save workout to database
+        async function saveWorkout(workoutData) {
+            try {
+                console.log('Saving workout:', workoutData);
+                
+                // Validate date before saving
+                if (!validateDate(workoutData.workout_date)) {
+                    return { 
+                        success: false, 
+                        message: 'Cannot log workouts for future dates. Please select today or a past date.' 
+                    };
+                }
+                
+                const response = await fetch('/api/workouts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(workoutData)
+                });
+                
+                const data = await response.json();
+                console.log('Save workout response:', data);
+                return data;
+            } catch (error) {
+                console.error('Error saving workout:', error);
+                return { success: false, message: 'Network error: ' + error.message };
+            }
+        }
+
+        // Delete workout from database
+        async function deleteWorkoutFromDB(workoutId) {
+            try {
+                console.log('Deleting workout:', workoutId);
+                const response = await fetch(`/api/workouts/${workoutId}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                console.log('Delete workout response:', data);
+                return data;
+            } catch (error) {
+                console.error('Error deleting workout:', error);
+                return { success: false, message: 'Network error: ' + error.message };
+            }
+        }
+
+        // Form submission handler
+        workoutForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const workoutType = document.getElementById('workout-type').value;
+            const workoutDate = document.getElementById('workout-date').value;
+            const duration = parseInt(document.getElementById('duration').value);
+            const intensity = document.getElementById('intensity').value;
+            const notes = document.getElementById('notes').value;
+
+            console.log('Form submission data:', { workoutType, workoutDate, duration, intensity, notes });
+
+            // Basic validation
+            if (!workoutType || !duration || !intensity) {
+                showToast('error', 'Missing Information', 'Please fill in all required fields');
+                return;
+            }
+
+            // Date validation
+            if (!validateDate(workoutDate)) {
+                showToast('error', 'Invalid Date', 'You can only log workouts for today or past dates');
+                workoutDateInput.classList.add('invalid');
+                workoutDateInput.focus();
+                return;
+            }
+
+            // Show loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            submitBtn.disabled = true;
+
+            try {
+                const result = await saveWorkout({
+                    workout_type: workoutType,
+                    workout_date: workoutDate,
+                    duration_minutes: duration,
+                    intensity_level: intensity,
+                    notes: notes
+                });
+
+                if (result.success) {
+                    showToast('success', 'Workout Saved!', `You burned approximately ${result.calories_burned} calories!`, 5000);
+                    
+                    // Reset form
+                    this.reset();
+                    initializeDateRestrictions(); // Reset to today
+                    caloriesEstimate.textContent = '0';
+                    
+                    // Reload workouts and stats
+                    loadWorkouts();
+                    loadWorkoutStats();
+                } else {
+                    showToast('error', 'Error', result.message || 'Failed to save workout');
+                }
+            } catch (error) {
+                showToast('error', 'Network Error', 'Unable to save workout. Please try again.');
+            } finally {
+                // Restore button state
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Delete workout handler
+        async function deleteWorkout(workoutId) {
+            showConfirmation(
+                'Are you sure you want to delete this workout? This action cannot be undone.',
+                async () => {
+                    try {
+                        const result = await deleteWorkoutFromDB(workoutId);
+                        
+                        if (result.success) {
+                            showToast('success', 'Workout Deleted', 'Your workout has been removed successfully.');
+                            // Reload workouts and stats
+                            loadWorkouts();
+                            loadWorkoutStats();
+                        } else {
+                            showToast('error', 'Error', result.message || 'Failed to delete workout');
+                        }
+                    } catch (error) {
+                        showToast('error', 'Network Error', 'Unable to delete workout. Please try again.');
+                    }
+                }
+            );
+        }
+
+        // Update workout history display
+        function updateWorkoutHistory(workouts = []) {
+            console.log('Updating workout history with:', workouts);
+            
+            if (workouts.length === 0) {
+                showEmptyState();
+                return;
+            }
+
+            workoutHistory.innerHTML = workouts.map(workout => `
+                <div class="history-item">
+                    <div class="history-main">
+                        <div class="history-type">${workout.workout_type.charAt(0).toUpperCase() + workout.workout_type.slice(1)}</div>
+                        <div class="history-details">
+                            <span>${workout.duration_minutes} min</span>
+                            <span>${workout.intensity_level}</span>
+                            <span>${new Date(workout.workout_date).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                    <div class="history-calories">${workout.calories_burned} cal</div>
+                    <button class="delete-btn" onclick="deleteWorkout(${workout.id})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Show empty state
+        function showEmptyState() {
+            workoutHistory.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-dumbbell"></i>
+                    </div>
+                    <h4>No Workouts Yet</h4>
+                    <p>Log your first workout to see it here</p>
+                </div>
+            `;
+        }
+
+        // Update statistics display
+        function updateStatsDisplay(stats) {
+            console.log('Updating stats display:', stats);
+            totalCalories.textContent = (stats.total_calories || 0).toLocaleString();
+            totalMinutes.textContent = (stats.total_minutes || 0).toLocaleString();
+            totalWorkouts.textContent = (stats.total_workouts || 0).toLocaleString();
+        }
+
+        // Update statistics from workouts array
+        function updateStats(workouts = []) {
+            console.log('Updating stats from workouts:', workouts);
+            const totalCal = workouts.reduce((sum, workout) => sum + (workout.calories_burned || 0), 0);
+            const totalMin = workouts.reduce((sum, workout) => sum + (workout.duration_minutes || 0), 0);
+
+            totalCalories.textContent = totalCal.toLocaleString();
+            totalMinutes.textContent = totalMin.toLocaleString();
+            totalWorkouts.textContent = workouts.length.toLocaleString();
+        }
+
+        // Initialize and update chart
+        function updateChart(workouts = []) {
+            const ctx = document.getElementById('workoutChart').getContext('2d');
+            
+            // Group workouts by type for the chart
+            const workoutTypes = {};
+            workouts.forEach(workout => {
+                if (!workoutTypes[workout.workout_type]) {
+                    workoutTypes[workout.workout_type] = 0;
+                }
+                workoutTypes[workout.workout_type] += (workout.duration_minutes || 0);
+            });
+
+            const labels = Object.keys(workoutTypes).map(type => 
+                type.charAt(0).toUpperCase() + type.slice(1)
+            );
+            const data = Object.values(workoutTypes);
+
+            if (workoutChart) {
+                workoutChart.destroy();
+            }
+
+            // Only create chart if there's data
+            if (labels.length > 0 && data.length > 0) {
+                workoutChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: [
+                                '#ABC85F',
+                                '#8FB351',
+                                '#6A994E',
+                                '#A7C957',
+                                '#90BE6D',
+                                '#6B9080',
+                                '#4A7C59'
+                            ],
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.label}: ${context.raw} minutes`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            } else {
+                // Clear chart if no data
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            }
+        }
+
+        // Initialize the page
+        function initializePage() {
+            console.log('Initializing workout page...');
+            
+            // Set up date restrictions
+            initializeDateRestrictions();
+            
+            // Load data
+            loadWorkouts();
+            loadWorkoutStats();
+            
+            // Test calorie calculation
+            setTimeout(() => {
+                console.log('Testing calorie calculation...');
+                updateCaloriesEstimate();
+            }, 1000);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+</body>
+</html>

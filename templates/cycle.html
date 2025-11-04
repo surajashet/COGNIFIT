@@ -352,6 +352,38 @@
             color: var(--primary-color);
         }
 
+        /* Success Message */
+        .success-message {
+            background-color: rgba(171, 200, 95, 0.1);
+            border-left: 4px solid var(--primary-color);
+            padding: 15px 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         /* Responsive Design */
         @media (max-width: 992px) {
             .dashboard-container {
@@ -406,13 +438,18 @@
                 <span>Cycle Tracking</span>
             </div>
             
-            <div class="user-menu">
-                <div class="user-profile">
-                    <div class="avatar">JD</div>
-                    <span>Jane Doe</span>
-                    <i class="fas fa-chevron-down"></i>
-                </div>
+             <div class="user-menu">
+                {% if session.get('user_id') %}
+                    <div class="user-profile">
+                        <div class="avatar">{{ session.get('username')[0]|upper }}</div>
+                        <span>{{ session.get('username') }}</span>
+                    </div>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-primary" style="margin-right:10px;">Login</a>
+                    <a href="{{ url_for('signup') }}" class="btn btn-primary">Signup</a>
+                {% endif %}
             </div>
+            
         </header>
 
         <!-- Sidebar -->
@@ -421,10 +458,16 @@
                 <i class="fas fa-home"></i>
                 <span>Dashboard</span>
             </a>
-            <a href="#" class="nav-item">
+            <a href="{{ url_for('workout') }}" class="nav-item {% if request.path == '/workout' %}active{% endif %}">
+                <i class="fas fa-dumbbell"></i>
+                <span>Workout</span>
+            </a>
+
+            <a href="{{ url_for('progress') }}" class="nav-item {% if request.path == '/progress' %}active{% endif %}" >
                 <i class="fas fa-chart-line"></i>
                 <span>Progress</span>
             </a>
+           
             <a href="{{ url_for('recipes') }}" class="nav-item">
                 <i class="fas fa-utensils"></i>
                 <span>Recipes</span>
@@ -441,10 +484,10 @@
                 <i class="fas fa-calendar-alt"></i>
                 <span>Calendar</span>
             </a>
-            <a href="#" class="nav-item" onclick="alert('Snap feature coming soon!')">
-                <i class="fas fa-camera"></i>
-                <span>Snap</span>
-            </a>
+            <a href="{{ url_for('snap') }}" class="nav-item {% if request.path == url_for('snap') %}active{% endif %}">
+    <i class="fas fa-camera"></i>
+    <span>Snap</span>
+</a>
             <a href="{{ url_for('settings') }}" class="nav-item {% if request.path == url_for('settings') %}active{% endif %}">
                 <i class="fas fa-cog"></i>
                 <span>Settings</span>
@@ -462,9 +505,20 @@
                 <h1 class="page-title">Cycle Tracking</h1>
             </div>
 
+            <!-- Success Message -->
+            <div class="success-message" id="successMessage">
+                <strong>✅ Success!</strong> Your cycle data has been saved to your account.
+            </div>
+
             <!-- Alert Box -->
             <div class="alert-box">
                 <strong>💡 For accurate predictions:</strong> Enter at least 3 recent period start dates. Future dates are not allowed.
+            </div>
+
+            <!-- Loading Spinner -->
+            <div class="loading-spinner" id="loadingSpinner">
+                <div class="spinner"></div>
+                <p>Calculating and saving your cycle data...</p>
             </div>
 
             <!-- Input Form -->
@@ -501,7 +555,7 @@
                         <div class="error-message" id="error5">Future dates are not allowed</div>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
                         <i class="fas fa-calculator"></i> Calculate Next Period
                     </button>
                 </form>
@@ -526,7 +580,7 @@
                     </div>
                 </div>
                 <button onclick="clearHistory()" class="btn btn-secondary" style="margin-top: 15px;">
-                    <i class="fas fa-trash"></i> Clear History
+                    <i class="fas fa-trash"></i> Clear Local History
                 </button>
             </div>
         </main>
@@ -626,8 +680,8 @@
             date3.valueAsDate = date3Obj;
         }
 
-        // Form submission - DATA DRIVEN APPROACH
-        document.getElementById('cycleForm').addEventListener('submit', function(e) {
+        // Form submission - USING API ENDPOINT
+        document.getElementById('cycleForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             // Validate all dates before processing
@@ -650,66 +704,72 @@
                 return;
             }
 
-            // Sort dates chronologically (oldest first for easier calculation)
-            dates.sort((a, b) => new Date(a) - new Date(b));
+            // Show loading state
+            const submitBtn = document.getElementById('submitBtn');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const originalText = submitBtn.innerHTML;
+            
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Calculating...';
+            submitBtn.disabled = true;
+            loadingSpinner.style.display = 'block';
 
-            // Calculate actual cycle lengths from the data
-            const cycleLengths = [];
-            for (let i = 0; i < dates.length - 1; i++) {
-                const start = new Date(dates[i]);
-                const end = new Date(dates[i + 1]);
-                const diffTime = Math.abs(end - start);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                cycleLengths.push(diffDays);
+            try {
+                // Send data to API endpoint
+                const response = await fetch('/api/predict_cycle', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ dates: dates })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Display results from API
+                    displayResultsFromAPI(result);
+                    
+                    // Show success message
+                    showSuccessMessage();
+                    
+                    // Add to local history
+                    addToHistory(dates[dates.length - 1], result.avg_cycle_length, result.cycle_lengths);
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Network error. Please try again.');
+            } finally {
+                // Restore button state
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+                loadingSpinner.style.display = 'none';
             }
-
-            // Calculate average cycle length from actual data
-            const avgCycleLength = cycleLengths.reduce((a, b) => a + b, 0) / cycleLengths.length;
-            const roundedAvg = Math.round(avgCycleLength);
-
-            // Calculate next period using ACTUAL DATA (not rule-based)
-            const lastPeriod = new Date(dates[dates.length - 1]); // Most recent period
-            const nextPeriod = new Date(lastPeriod);
-            nextPeriod.setDate(lastPeriod.getDate() + roundedAvg);
-
-            // Calculate ovulation (using actual luteal phase estimate)
-            const ovulation = new Date(nextPeriod);
-            ovulation.setDate(nextPeriod.getDate() - 14);
-
-            // Calculate fertile window
-            const fertileStart = new Date(ovulation);
-            fertileStart.setDate(ovulation.getDate() - 5);
-            const fertileEnd = new Date(ovulation);
-            fertileEnd.setDate(ovulation.getDate() + 1);
-
-            // Display results
-            displayResults({
-                nextPeriod: nextPeriod,
-                ovulation: ovulation,
-                fertileStart: fertileStart,
-                fertileEnd: fertileEnd,
-                avgCycleLength: roundedAvg,
-                cycleLengths: cycleLengths
-            });
-
-            // Add to history
-            addToHistory(dates[dates.length - 1], roundedAvg, cycleLengths);
         });
 
-        function displayResults(analysis) {
+        function displayResultsFromAPI(result) {
             const resultsDiv = document.getElementById('predictionResults');
             const resultsSection = document.getElementById('resultsSection');
+            
+            const prediction = result.prediction;
+            const fertileStart = new Date(prediction.fertile_window[0]);
+            const fertileEnd = new Date(prediction.fertile_window[1]);
             
             resultsDiv.innerHTML = `
                 <div class="result-card fade-in">
                     <h3 class="result-title"><i class="fas fa-calendar-day"></i> Next Period Prediction</h3>
                     <div class="result-item">
                         <span>Date:</span>
-                        <span class="result-value">${formatDate(analysis.nextPeriod)}</span>
+                        <span class="result-value">${formatDate(new Date(prediction.next_period))}</span>
                     </div>
                     <div class="result-item">
                         <span>Average Cycle Length:</span>
-                        <span class="result-value">${analysis.avgCycleLength} days</span>
+                        <span class="result-value">${Math.round(result.avg_cycle_length)} days</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Prediction Method:</span>
+                        <span class="result-value">${prediction.method.toUpperCase()}</span>
                     </div>
                 </div>
                 
@@ -717,11 +777,11 @@
                     <h3 class="result-title"><i class="fas fa-egg"></i> Fertility Information</h3>
                     <div class="result-item">
                         <span>Estimated Ovulation:</span>
-                        <span class="result-value">${formatDate(analysis.ovulation)}</span>
+                        <span class="result-value">${formatDate(new Date(prediction.ovulation_day))}</span>
                     </div>
                     <div class="result-item">
                         <span>Fertile Window:</span>
-                        <span class="result-value">${formatDate(analysis.fertileStart)} - ${formatDate(analysis.fertileEnd)}</span>
+                        <span class="result-value">${formatDate(fertileStart)} - ${formatDate(fertileEnd)}</span>
                     </div>
                 </div>
                 
@@ -729,11 +789,15 @@
                     <h3 class="result-title"><i class="fas fa-chart-bar"></i> Cycle Analysis</h3>
                     <div class="result-item">
                         <span>Cycle Lengths:</span>
-                        <span class="result-value">${analysis.cycleLengths.join(', ')} days</span>
+                        <span class="result-value">${result.cycle_lengths.join(', ')} days</span>
                     </div>
                     <div class="result-item">
                         <span>Cycle Variability:</span>
-                        <span class="result-value">${Math.max(...analysis.cycleLengths) - Math.min(...analysis.cycleLengths)} days</span>
+                        <span class="result-value">${Math.max(...result.cycle_lengths) - Math.min(...result.cycle_lengths)} days</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Data Points:</span>
+                        <span class="result-value">${result.cycle_lengths.length + 1} periods</span>
                     </div>
                 </div>
             `;
@@ -749,6 +813,16 @@
             }, 100);
         }
 
+        function showSuccessMessage() {
+            const successMessage = document.getElementById('successMessage');
+            successMessage.style.display = 'block';
+            
+            // Hide success message after 5 seconds
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 5000);
+        }
+
         function formatDate(date) {
             return date.toLocaleDateString('en-US', { 
                 year: 'numeric', 
@@ -760,7 +834,7 @@
         function addToHistory(periodDate, avgCycleLength, cycleLengths) {
             const entry = {
                 periodDate: periodDate,
-                avgCycleLength: avgCycleLength,
+                avgCycleLength: Math.round(avgCycleLength),
                 cycleLengths: cycleLengths,
                 calculatedAt: new Date().toISOString()
             };
@@ -835,7 +909,7 @@
         }
 
         function clearHistory() {
-            if (confirm('Are you sure you want to clear all your cycle history? This cannot be undone.')) {
+            if (confirm('Are you sure you want to clear your local browser history? This will not affect data saved on the server.')) {
                 cycleHistory = [];
                 localStorage.removeItem('cycleHistory');
                 displayHistory();

@@ -1,280 +1,731 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cognifit | Food Tracker</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-  />
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #ffffff;
-    }
-    
-    .card-shadow {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    }
-    
-    .upload-area {
-      border: 2px dashed #e2e8f0;
-      transition: all 0.3s ease;
-    }
-    
-    .upload-area:hover {
-      border-color: #ABC85F;
-      background-color: #f8fafc;
-    }
-    
-    .btn-red {
-      background-color: #A3391A;
-      color: white;
-    }
-    
-    .btn-red:hover {
-      background-color: #8a3016;
-    }
-    
-    .text-green {
-      color: #ABC85F;
-    }
-    
-    .border-green {
-      border-color: #ABC85F;
-    }
-    
-    .focus-green:focus {
-      border-color: #ABC85F;
-      ring-color: #ABC85F;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snap | Cognifit</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================== */
+        /* GLOBAL VARIABLES & RESET */
+        /* ============================================== */
+        :root {
+            --primary-color: #abc85f;
+            --secondary-color: #a3391a;
+            --accent-color: #6A8CAF;
+            --text-dark: #2c2c2c;
+            --text-light: #fff;
+            --bg-light: #f7f7f7;
+            --bg-gray: #f0f0f0;
+            --card-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            --hover-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+            --border-radius: 12px;
+            --font-family: 'Poppins', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            color: var(--text-dark);
+            line-height: 1.5;
+            background-color: var(--bg-light);
+            min-height: 100vh;
+            font-size: 14px;
+        }
+
+        /* ============================================== */
+        /* DASHBOARD LAYOUT */
+        /* ============================================== */
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            grid-template-rows: 60px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .dashboard-header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .logo i {
+            margin-right: 8px;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            font-size: 14px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background-color: var(--text-light);
+            padding: 20px 0;
+            box-shadow: var(--card-shadow);
+            z-index: 90;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--text-dark);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: rgba(171, 200, 95, 0.15);
+            color: var(--primary-color);
+            border-right: 3px solid var(--primary-color);
+        }
+
+        .nav-item i {
+            margin-right: 12px;
+            width: 18px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        /* Main Content */
+        .dashboard-content {
+            padding: 20px;
+            background-color: var(--bg-light);
+            overflow-y: auto;
+        }
+
+        /* Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-dark);
+            position: relative;
+            padding-bottom: 8px;
+        }
+
+        .page-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 3px;
+        }
+
+        /* Cards and Forms */
+        .info-card {
+            background-color: white;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            margin-bottom: 25px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title i {
+            color: var(--primary-color);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-family: var(--font-family);
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(171, 200, 95, 0.2);
+        }
+
+        .form-group input.invalid {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 2px rgba(163, 57, 26, 0.2);
+        }
+
+        .error-message {
+            color: var(--secondary-color);
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-family: var(--font-family);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+        }
+
+        .btn-primary:hover {
+            background-color: #9ab855;
+            transform: translateY(-2px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: var(--text-light);
+        }
+
+        .btn-secondary:hover {
+            background-color: #8a3016;
+            transform: translateY(-2px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        /* Food Tracker Specific Styles */
+        .upload-area {
+            border: 2px dashed #e2e8f0;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary-color);
+            background-color: #f8fafc;
+        }
+
+        .input-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+
+        .quantity-btn {
+            background-color: rgba(171, 200, 95, 0.1);
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .quantity-btn:hover {
+            background-color: rgba(171, 200, 95, 0.2);
+        }
+
+        .quantity-input {
+            width: 60px;
+            text-align: center;
+            border: none;
+            padding: 10px 5px;
+            font-weight: 500;
+        }
+
+        .quantity-input:focus {
+            outline: none;
+        }
+
+        /* Results Section */
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .nutrition-card {
+            background-color: rgba(171, 200, 95, 0.1);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .nutrition-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .nutrition-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .food-name {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 5px;
+        }
+
+        .food-details {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+            
+            .results-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .input-row {
+                flex-direction: column;
+            }
+            
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Animation classes */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
 </head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="logo">
+                <i class="fas fa-camera"></i>
+                <span>Cognifit Snap</span>
+            </div>
+            
+            <div class="user-menu">
+                <div class="user-profile">
+                    
+            </div>
+        </header>
 
-<body class="text-gray-800 min-h-screen">
-  <div class="max-w-3xl mx-auto px-4 py-8">
-    <!-- Header -->
-    <div class="text-center mb-10">
-      <h1 class="text-3xl font-bold mb-3 text-green">🍽️ Cognifit Food Tracker</h1>
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <a href="{{ url_for('dashboard') }}" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ url_for('workout') }}" class="nav-item">
+                <i class="fas fa-dumbbell"></i>
+                <span>Workout</span>
+            </a>
+            <a href="{{ url_for('progress') }}" class="nav-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Progress</span>
+            </a>
+            <a href="{{ url_for('recipes') }}" class="nav-item">
+                <i class="fas fa-utensils"></i>
+                <span>Recipes</span>
+            </a>
+            <a href="{{ url_for('cycle_form') }}" class="nav-item">
+                <i class="fas fa-female"></i>
+                <span>Cycle Tracking</span>
+            </a>
+            <a href="{{ url_for('blogs') }}" class="nav-item">
+                <i class="fas fa-newspaper"></i>
+                <span>Blogs</span>
+            </a>
+            <a href="{{ url_for('calendar') }}" class="nav-item">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Calendar</span>
+            </a>
+            <a href="{{ url_for('snap') }}" class="nav-item active">
+                <i class="fas fa-camera"></i>
+                <span>Snap</span>
+            </a>
+            <a href="{{ url_for('settings') }}" class="nav-item">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+            <a href="{{ url_for('logout') }}" class="nav-item">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="dashboard-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1 class="page-title">Food Tracker</h1>
+            </div>
+
+            <!-- Upload Section -->
+            <div class="info-card">
+                <h2 class="card-title"><i class="fas fa-camera"></i> Upload Food Image</h2>
+                
+                <div class="upload-area">
+                    <i class="fas fa-cloud-upload-alt" style="font-size: 48px; color: #abc85f; margin-bottom: 15px;"></i>
+                    <p style="margin-bottom: 15px; color: #666;">Upload a photo of your food for automatic nutrition analysis</p>
+                    <input id="fileInput" type="file" accept="image/*" class="form-group" />
+                </div>
+                
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="gramsInputImage">Measure</label>
+                        <input id="gramsInputImage" type="number" value="100" min="1" />
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="unitImage">Unit</label>
+                        <select id="unitImage">
+                            <option value="grams">grams</option>
+                            <option value="ml">ml</option>
+                            <option value="cup">cup</option>
+                            <option value="plate">plate</option>
+                            <option value="tbsp">tbsp</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="quantityImage">Quantity</label>
+                        <div class="quantity-control">
+                            <button id="decreaseQtyImage" class="quantity-btn">−</button>
+                            <input id="quantityImage" type="number" value="1" min="1" class="quantity-input" />
+                            <button id="increaseQtyImage" class="quantity-btn">+</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="predictButton" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-search"></i> Predict Food
+                </button>
+            </div>
+
+            <!-- Manual Entry -->
+            <div class="info-card">
+                <h2 class="card-title"><i class="fas fa-edit"></i> Manual Food Entry</h2>
+                
+                <div class="form-group">
+                    <label for="manualFoodInput">Food Name</label>
+                    <input id="manualFoodInput" type="text" placeholder="Enter food name (e.g., apple)" />
+                </div>
+                
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="gramsInputManual">Measure</label>
+                        <input id="gramsInputManual" type="number" value="100" min="1" />
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="unitManual">Unit</label>
+                        <select id="unitManual">
+                            <option value="grams">grams</option>
+                            <option value="ml">ml</option>
+                            <option value="cup">cup</option>
+                            <option value="plate">plate</option>
+                            <option value="tbsp">tbsp</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="quantityManual">Quantity</label>
+                        <div class="quantity-control">
+                            <button id="decreaseQtyManual" class="quantity-btn">−</button>
+                            <input id="quantityManual" type="number" value="1" min="1" class="quantity-input" />
+                            <button id="increaseQtyManual" class="quantity-btn">+</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="manualLookupButton" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-chart-bar"></i> Lookup Nutrition
+                </button>
+            </div>
+
+            <!-- Result Display -->
+            <div id="resultCard" class="info-card fade-in" style="display: none;">
+                <h2 class="card-title"><i class="fas fa-chart-pie"></i> Nutrition Analysis</h2>
+                
+                <div class="food-name" id="predictedFood"></div>
+                <div class="food-details" id="foodDetails"></div>
+                
+                <div class="results-grid">
+                    <div class="nutrition-card">
+                        <div class="nutrition-label">Calories</div>
+                        <div class="nutrition-value" id="calories">0</div>
+                    </div>
+                    <div class="nutrition-card">
+                        <div class="nutrition-label">Protein</div>
+                        <div class="nutrition-value" id="protein">0</div>
+                    </div>
+                    <div class="nutrition-card">
+                        <div class="nutrition-label">Carbs</div>
+                        <div class="nutrition-value" id="carbs">0</div>
+                    </div>
+                    <div class="nutrition-card">
+                        <div class="nutrition-label">Fat</div>
+                        <div class="nutrition-value" id="fat">0</div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <button id="saveButton" class="btn btn-secondary">
+                        <i class="fas fa-check"></i> Save Entry
+                    </button>
+                </div>
+            </div>
+        </main>
     </div>
 
-    <!-- Upload Section -->
-    <div class="bg-white rounded-2xl card-shadow p-6 mb-6">
-      <h2 class="text-xl font-semibold mb-4 text-green">Upload Food Image</h2>
-      
-      <input id="fileInput" type="file" accept="image/*" class="block mb-4 w-full text-sm text-gray-500
-        file:mr-4 file:py-2 file:px-4
-        file:rounded-full file:border-0
-        file:text-sm file:font-semibold
-        file:bg-green-50 file:text-green-700
-        hover:file:bg-green-100" />
+    <script>
+        const predictButton = document.getElementById("predictButton");
+        const manualLookupButton = document.getElementById("manualLookupButton");
+        const saveButton = document.getElementById("saveButton");
 
-      <!-- 3-column Row -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-        <!-- Amount -->
-        <div class="flex items-center gap-2 w-full sm:w-1/3">
-          <label class="text-sm text-gray-600 whitespace-nowrap">Amount:</label>
-          <input id="gramsInputImage" type="number" value="100"
-            class="w-full border border-gray-300 rounded-lg p-2 text-center focus:ring-2 focus:ring-green-400 focus-green" />
-        </div>
+        const unitToGrams = { grams: 1, ml: 1, cup: 240, plate: 350, tbsp: 15 };
 
-        <!-- Unit -->
-        <div class="flex items-center gap-2 w-full sm:w-1/3">
-          <label class="text-sm text-gray-600 whitespace-nowrap">Unit:</label>
-          <select id="unitImage"
-            class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-green-400 focus-green">
-            <option value="grams">grams</option>
-            <option value="ml">ml</option>
-            <option value="cup">cup</option>
-            <option value="plate">plate</option>
-            <option value="tbsp">tbsp</option>
-          </select>
-        </div>
+        // Quantity + buttons
+        [["increaseQtyImage", "decreaseQtyImage", "quantityImage"],
+         ["increaseQtyManual", "decreaseQtyManual", "quantityManual"]]
+          .forEach(([incId, decId, inputId]) => {
+            const inc = document.getElementById(incId);
+            const dec = document.getElementById(decId);
+            const input = document.getElementById(inputId);
+            inc.addEventListener("click", () => input.value = parseInt(input.value || 1) + 1);
+            dec.addEventListener("click", () => {
+                if (parseInt(input.value) > 1) input.value = parseInt(input.value) - 1;
+            });
+          });
 
-        <!-- Quantity -->
-        <div class="flex items-center gap-2 w-full sm:w-1/3">
-          <label class="text-sm text-gray-600 whitespace-nowrap">Quantity:</label>
-          <div class="flex items-center border border-gray-300 rounded-lg overflow-hidden">
-            <button id="decreaseQtyImage"
-              class="bg-green-50 hover:bg-green-100 text-green-700 px-3 py-2 transition">−</button>
-            <input id="quantityImage" type="number" value="1" min="1"
-              class="w-16 text-center outline-none border-none" />
-            <button id="increaseQtyImage"
-              class="bg-green-50 hover:bg-green-100 text-green-700 px-3 py-2 transition">+</button>
-          </div>
-        </div>
-      </div>
+        // --- Predict from Image ---
+        predictButton.addEventListener("click", async () => {
+            const fileInput = document.getElementById("fileInput");
+            const amount = parseFloat(document.getElementById("gramsInputImage").value) || 100;
+            const quantity = parseFloat(document.getElementById("quantityImage").value) || 1;
+            const unit = document.getElementById("unitImage").value;
+            const totalGrams = amount * (unitToGrams[unit] || 1) * quantity;
 
-      <button id="predictButton"
-        class="w-full btn-red font-medium py-3 rounded-lg transition flex items-center justify-center gap-2">
-        <i class="fas fa-search"></i> Predict Food
-      </button>
-    </div>
+            if (!fileInput.files.length) return alert("Please upload an image.");
 
-    <!-- Manual Entry -->
-    <div class="bg-white rounded-2xl card-shadow p-6 mb-6">
-      <h2 class="text-xl font-semibold mb-4 text-green">Manual Food Entry</h2>
-      
-      <input id="manualFoodInput" type="text" placeholder="Enter food name (e.g., apple)"
-        class="border border-gray-300 rounded p-3 w-full mb-4 focus:ring-2 focus:ring-green-400 focus-green" />
+            // Show loading state
+            predictButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+            predictButton.disabled = true;
 
-      <!-- 3-column Row -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-        <!-- Amount -->
-        <div class="flex items-center gap-2 w-full sm:w-1/3">
-          <label class="text-sm text-gray-600 whitespace-nowrap">Amount:</label>
-          <input id="gramsInputManual" type="number" value="100"
-            class="w-full border border-gray-300 rounded-lg p-2 text-center focus:ring-2 focus:ring-green-400 focus-green" />
-        </div>
+            try {
+                const formData = new FormData();
+                formData.append("file", fileInput.files[0]);
+                formData.append("grams", totalGrams);
 
-        <!-- Unit -->
-        <div class="flex items-center gap-2 w-full sm:w-1/3">
-          <label class="text-sm text-gray-600 whitespace-nowrap">Unit:</label>
-          <select id="unitManual"
-            class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-green-400 focus-green">
-            <option value="grams">grams</option>
-            <option value="ml">ml</option>
-            <option value="cup">cup</option>
-            <option value="plate">plate</option>
-            <option value="tbsp">tbsp</option>
-          </select>
-        </div>
+                const res = await fetch("http://127.0.0.1:8000/predict", { method: "POST", body: formData });
+                const data = await res.json();
+                if (!res.ok) return alert(data.detail || "Error predicting food.");
 
-        <!-- Quantity -->
-        <div class="flex items-center gap-2 w-full sm:w-1/3">
-          <label class="text-sm text-gray-600 whitespace-nowrap">Quantity:</label>
-          <div class="flex items-center border border-gray-300 rounded-lg overflow-hidden">
-            <button id="decreaseQtyManual"
-              class="bg-green-50 hover:bg-green-100 text-green-700 px-3 py-2 transition">−</button>
-            <input id="quantityManual" type="number" value="1" min="1"
-              class="w-16 text-center outline-none border-none" />
-            <button id="increaseQtyManual"
-              class="bg-green-50 hover:bg-green-100 text-green-700 px-3 py-2 transition">+</button>
-          </div>
-        </div>
-      </div>
-
-      <button id="manualLookupButton"
-        class="w-full btn-red font-medium py-3 rounded-lg transition flex items-center justify-center gap-2">
-        <i class="fas fa-chart-bar"></i> Lookup Nutrition
-      </button>
-    </div>
-
-    <!-- Result Display -->
-    <div id="resultCard" class="hidden bg-white rounded-2xl card-shadow p-6 mb-6 transition">
-      <h3 class="text-2xl font-semibold text-center mb-6 text-green" id="predictedFood"></h3>
-
-      <div class="grid grid-cols-2 gap-4 text-center mb-6">
-        <div class="bg-green-50 rounded-lg p-4">
-          <p class="text-sm text-gray-600">Calories</p>
-          <p class="text-lg font-semibold" id="calories">0</p>
-        </div>
-        <div class="bg-green-50 rounded-lg p-4">
-          <p class="text-sm text-gray-600">Protein</p>
-          <p class="text-lg font-semibold" id="protein">0</p>
-        </div>
-        <div class="bg-green-50 rounded-lg p-4">
-          <p class="text-sm text-gray-600">Carbs</p>
-          <p class="text-lg font-semibold" id="carbs">0</p>
-        </div>
-        <div class="bg-green-50 rounded-lg p-4">
-          <p class="text-sm text-gray-600">Fat</p>
-          <p class="text-lg font-semibold" id="fat">0</p>
-        </div>
-      </div>
-
-      <div class="text-center">
-        <button id="saveButton"
-          class="btn-red px-5 py-3 rounded-lg transition font-medium">
-          <i class="fas fa-check mr-2"></i> Save Entry
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const predictButton = document.getElementById("predictButton");
-    const manualLookupButton = document.getElementById("manualLookupButton");
-    const saveButton = document.getElementById("saveButton");
-
-    const unitToGrams = { grams: 1, ml: 1, cup: 240, plate: 350, tbsp: 15 };
-
-    // Quantity + buttons
-    [["increaseQtyImage", "decreaseQtyImage", "quantityImage"],
-     ["increaseQtyManual", "decreaseQtyManual", "quantityManual"]]
-      .forEach(([incId, decId, inputId]) => {
-        const inc = document.getElementById(incId);
-        const dec = document.getElementById(decId);
-        const input = document.getElementById(inputId);
-        inc.addEventListener("click", () => input.value = parseInt(input.value || 1) + 1);
-        dec.addEventListener("click", () => {
-          if (parseInt(input.value) > 1) input.value = parseInt(input.value) - 1;
+                displayResult(data.predicted_food, data.nutrition_info, totalGrams, quantity, unit);
+            } catch (error) {
+                alert("Error connecting to the prediction service. Please try again.");
+                console.error(error);
+            } finally {
+                predictButton.innerHTML = '<i class="fas fa-search"></i> Predict Food';
+                predictButton.disabled = false;
+            }
         });
-      });
 
-    // --- Predict from Image ---
-    predictButton.addEventListener("click", async () => {
-      const fileInput = document.getElementById("fileInput");
-      const amount = parseFloat(document.getElementById("gramsInputImage").value) || 100;
-      const quantity = parseFloat(document.getElementById("quantityImage").value) || 1;
-      const unit = document.getElementById("unitImage").value;
-      const totalGrams = amount * (unitToGrams[unit] || 1) * quantity; // ✅ FIXED
+        // --- Manual Lookup ---
+        manualLookupButton.addEventListener("click", async () => {
+            const foodInput = document.getElementById("manualFoodInput").value.trim();
+            const amount = parseFloat(document.getElementById("gramsInputManual").value) || 100;
+            const quantity = parseFloat(document.getElementById("quantityManual").value) || 1;
+            const unit = document.getElementById("unitManual").value;
+            const totalGrams = amount * (unitToGrams[unit] || 1) * quantity;
 
-      if (!fileInput.files.length) return alert("Please upload an image.");
+            if (!foodInput) return alert("Enter a food name first.");
 
-      const formData = new FormData();
-      formData.append("file", fileInput.files[0]);
-      formData.append("grams", totalGrams);
+            // Show loading state
+            manualLookupButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Looking Up...';
+            manualLookupButton.disabled = true;
 
-      const res = await fetch("http://127.0.0.1:8000/predict", { method: "POST", body: formData });
-      const data = await res.json();
-      if (!res.ok) return alert(data.detail || "Error predicting food.");
+            try {
+                const res = await fetch("http://127.0.0.1:8000/manual-lookup", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ food_name: foodInput, grams: totalGrams }),
+                });
 
-      displayResult(data.predicted_food, data.nutrition_info, totalGrams, quantity, unit);
-    });
+                const data = await res.json();
+                if (!res.ok) return alert(data.detail || "Error in manual lookup.");
 
-    // --- Manual Lookup ---
-    manualLookupButton.addEventListener("click", async () => {
-      const foodInput = document.getElementById("manualFoodInput").value.trim();
-      const amount = parseFloat(document.getElementById("gramsInputManual").value) || 100;
-      const quantity = parseFloat(document.getElementById("quantityManual").value) || 1;
-      const unit = document.getElementById("unitManual").value;
-      const totalGrams = amount * (unitToGrams[unit] || 1) * quantity; // ✅ FIXED
+                displayResult(data.name, data, totalGrams, quantity, unit);
+            } catch (error) {
+                alert("Error connecting to the nutrition service. Please try again.");
+                console.error(error);
+            } finally {
+                manualLookupButton.innerHTML = '<i class="fas fa-chart-bar"></i> Lookup Nutrition';
+                manualLookupButton.disabled = false;
+            }
+        });
 
-      if (!foodInput) return alert("Enter a food name first.");
+        // --- Show Result ---
+        function displayResult(foodName, nutrition, grams, quantity, unit) {
+            const resultCard = document.getElementById("resultCard");
+            resultCard.style.display = 'block';
+            
+            // Trigger animation
+            setTimeout(() => {
+                resultCard.classList.add('visible');
+            }, 10);
+            
+            document.getElementById("predictedFood").textContent = foodName;
+            document.getElementById("foodDetails").textContent = 
+    `${quantity} ${unit} ≈ ${grams.toFixed(1)}g`;
 
-      const res = await fetch("http://127.0.0.1:8000/manual-lookup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ food_name: foodInput, grams: totalGrams }),
-      });
 
-      const data = await res.json();
-      if (!res.ok) return alert(data.detail || "Error in manual lookup.");
+            document.getElementById("calories").textContent = nutrition.calories ? nutrition.calories.toFixed(2) : "0";
+            document.getElementById("protein").textContent = nutrition.protein ? nutrition.protein.toFixed(2) : "0";
+            document.getElementById("carbs").textContent = nutrition.carbs ? nutrition.carbs.toFixed(2) : "0";
+            document.getElementById("fat").textContent = nutrition.fat ? nutrition.fat.toFixed(2) : "0";
+        }
 
-      displayResult(data.name, data, totalGrams, quantity, unit);
-    });
+        // --- Save Entry ---
+        saveButton.addEventListener("click", () => {
+            // Show success message
+            const originalText = saveButton.innerHTML;
+            saveButton.innerHTML = '<i class="fas fa-check"></i> Saved!';
+            saveButton.style.backgroundColor = '#28a745';
+            
+            setTimeout(() => {
+                saveButton.innerHTML = originalText;
+                saveButton.style.backgroundColor = '';
+            }, 2000);
 
-    // --- Show Result ---
-    function displayResult(foodName, nutrition, grams, quantity, unit) {
-      document.getElementById("resultCard").classList.remove("hidden");
-      document.getElementById("predictedFood").textContent =
-        `${foodName} (${quantity} ${unit} ≈ ${grams.toFixed(1)}g)`;
-
-      document.getElementById("calories").textContent = nutrition.calories.toFixed(2);
-      document.getElementById("protein").textContent = nutrition.protein.toFixed(2);
-      document.getElementById("carbs").textContent = nutrition.carbs.toFixed(2);
-      document.getElementById("fat").textContent = nutrition.fat.toFixed(2);
-    }
-
-    // --- Save Entry ---
-    saveButton.addEventListener("click", () => {
-      alert("✅ Food entry saved successfully!");
-    });
-  </script>
+            
+            // Here you would typically send data to your backend
+            // For now, we'll just show a confirmation
+            console.log("Food entry saved to database");
+        });
+    </script>
 </body>
 </html>
