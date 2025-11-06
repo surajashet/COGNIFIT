@@ -349,6 +349,81 @@
             margin-bottom: 15px;
         }
 
+        /* Toast Notification Styles */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            padding: 15px 20px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            max-width: 350px;
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast.hide {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+
+        .toast-success {
+            background-color: var(--primary-color);
+        }
+
+        .toast-error {
+            background-color: #dc3545;
+        }
+
+        .toast-warning {
+            background-color: #f39c12;
+        }
+
+        .toast-info {
+            background-color: #3498db;
+        }
+
+        .toast-icon {
+            font-size: 18px;
+        }
+
+        .toast-message {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         @media (max-width: 768px) {
             .calendar-controls {
                 flex-direction: column;
@@ -379,6 +454,16 @@
 
             .modal-content {
                 margin: 20px auto;
+            }
+
+            .toast-container {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+            }
+
+            .toast {
+                max-width: 100%;
             }
         }
     </style>
@@ -526,6 +611,9 @@
         </div>
     </div>
 
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
     <script>
         // Calendar state
         let currentDate = new Date();
@@ -533,6 +621,60 @@
         let currentYear = currentDate.getFullYear();
         let selectedDate = null;
         let notes = {};
+    
+        // Toast notification function
+        function showToast(message, type = 'info', duration = 5000) {
+            const toastContainer = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            let icon = 'info-circle';
+            if (type === 'success') icon = 'check-circle';
+            if (type === 'error') icon = 'exclamation-circle';
+            if (type === 'warning') icon = 'exclamation-triangle';
+            
+            toast.innerHTML = `
+                <i class="fas fa-${icon} toast-icon"></i>
+                <div class="toast-message">${message}</div>
+                <button class="toast-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // Show toast with animation
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10);
+            
+            // Close button functionality
+            const closeBtn = toast.querySelector('.toast-close');
+            closeBtn.addEventListener('click', () => {
+                toast.classList.remove('show');
+                toast.classList.add('hide');
+                setTimeout(() => {
+                    toastContainer.removeChild(toast);
+                }, 300);
+            });
+            
+            // Auto remove after duration
+            if (duration > 0) {
+                setTimeout(() => {
+                    if (toast.parentNode === toastContainer) {
+                        toast.classList.remove('show');
+                        toast.classList.add('hide');
+                        setTimeout(() => {
+                            if (toast.parentNode === toastContainer) {
+                                toastContainer.removeChild(toast);
+                            }
+                        }, 300);
+                    }
+                }, duration);
+            }
+            
+            return toast;
+        }
     
         // Initialize calendar
         document.addEventListener('DOMContentLoaded', function() {
@@ -700,7 +842,7 @@
             const noteContent = document.getElementById('noteContent').value.trim();
             
             if (!noteContent) {
-                alert('Please enter a note');
+                showToast('Please enter a note', 'warning');
                 return;
             }
     
@@ -735,23 +877,45 @@
                     generateCalendar(currentMonth, currentYear);
                     closeModal();
                     
-                    alert('Note saved successfully!');
+                    showToast('Note saved successfully!', 'success');
                 } else {
-                    alert('Error saving note: ' + result.message);
+                    showToast('Error saving note: ' + result.message, 'error');
                 }
             } catch (error) {
                 console.error('Error saving note:', error);
-                alert('Error saving note. Please try again.');
+                showToast('Error saving note. Please try again.', 'error');
             }
         }
     
         // Delete all notes for selected date
         async function deleteAllNotes() {
-            if (!confirm('Are you sure you want to delete all notes for this date?')) {
-                return;
-            }
-    
             const dateString = formatDate(selectedDate);
+            
+            // Create a custom confirmation toast
+            const confirmToast = showToast(
+                'Are you sure you want to delete all notes for this date?', 
+                'warning', 
+                0 // No auto-dismiss
+            );
+            
+            // Add confirmation buttons
+            const toastMessage = confirmToast.querySelector('.toast-message');
+            toastMessage.innerHTML = `
+                <div>Are you sure you want to delete all notes for this date?</div>
+                <div style="margin-top: 10px; display: flex; gap: 10px;">
+                    <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="confirmDeleteNotes('${dateString}')">Yes, Delete</button>
+                    <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px;" onclick="dismissToast(this)">Cancel</button>
+                </div>
+            `;
+        }
+    
+        // Confirm deletion after user confirmation
+        async function confirmDeleteNotes(dateString) {
+            // Remove the confirmation toast
+            const toastContainer = document.getElementById('toastContainer');
+            while (toastContainer.firstChild) {
+                toastContainer.removeChild(toastContainer.firstChild);
+            }
             
             try {
                 const response = await fetch('/delete_calendar_notes', {
@@ -774,14 +938,24 @@
                     generateCalendar(currentMonth, currentYear);
                     closeModal();
                     
-                    alert(`Deleted ${result.deleted_count} notes!`);
+                    showToast(`Deleted ${result.deleted_count} notes!`, 'success');
                 } else {
-                    alert('Error deleting notes: ' + result.message);
+                    showToast('Error deleting notes: ' + result.message, 'error');
                 }
             } catch (error) {
                 console.error('Error deleting notes:', error);
-                alert('Error deleting notes. Please try again.');
+                showToast('Error deleting notes. Please try again.', 'error');
             }
+        }
+    
+        // Helper function to dismiss toast
+        function dismissToast(button) {
+            const toast = button.closest('.toast');
+            toast.classList.remove('show');
+            toast.classList.add('hide');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
         }
     
         // Close modal

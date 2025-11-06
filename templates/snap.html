@@ -373,6 +373,81 @@
             margin-bottom: 20px;
         }
 
+        /* Toast Notification Styles */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            padding: 15px 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--hover-shadow);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            max-width: 350px;
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast.hide {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+
+        .toast-success {
+            background-color: var(--primary-color);
+        }
+
+        .toast-error {
+            background-color: var(--secondary-color);
+        }
+
+        .toast-warning {
+            background-color: #f39c12;
+        }
+
+        .toast-info {
+            background-color: var(--accent-color);
+        }
+
+        .toast-icon {
+            font-size: 18px;
+        }
+
+        .toast-message {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         /* Responsive Design */
         @media (max-width: 992px) {
             .dashboard-container {
@@ -402,6 +477,16 @@
             .results-grid {
                 grid-template-columns: 1fr;
             }
+
+            .toast-container {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+            }
+
+            .toast {
+                max-width: 100%;
+            }
         }
 
         /* Animation classes */
@@ -427,55 +512,63 @@
             </div>
             
             <div class="user-menu">
-                <div class="user-profile">
-                    
+                {% if session.get('user_id') %}
+                    <div class="user-profile">
+                        <div class="avatar">{{ session.get('username')[0]|upper }}</div>
+                        <span>{{ session.get('username') }}</span>
+                    </div>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-primary" style="margin-right:10px;">Login</a>
+                    <a href="{{ url_for('signup') }}" class="btn btn-primary">Signup</a>
+                {% endif %}
             </div>
+            
         </header>
 
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <a href="{{ url_for('dashboard') }}" class="nav-item">
-                <i class="fas fa-home"></i>
-                <span>Dashboard</span>
-            </a>
-            <a href="{{ url_for('workout') }}" class="nav-item">
-                <i class="fas fa-dumbbell"></i>
-                <span>Workout</span>
-            </a>
-            <a href="{{ url_for('progress') }}" class="nav-item">
-                <i class="fas fa-chart-line"></i>
-                <span>Progress</span>
-            </a>
-            <a href="{{ url_for('recipes') }}" class="nav-item">
-                <i class="fas fa-utensils"></i>
-                <span>Recipes</span>
-            </a>
-            <a href="{{ url_for('cycle_form') }}" class="nav-item">
-                <i class="fas fa-female"></i>
-                <span>Cycle Tracking</span>
-            </a>
-            <a href="{{ url_for('blogs') }}" class="nav-item">
-                <i class="fas fa-newspaper"></i>
-                <span>Blogs</span>
-            </a>
-            <a href="{{ url_for('calendar') }}" class="nav-item">
-                <i class="fas fa-calendar-alt"></i>
-                <span>Calendar</span>
-            </a>
-            <a href="{{ url_for('snap') }}" class="nav-item active">
-                <i class="fas fa-camera"></i>
-                <span>Snap</span>
-            </a>
-            <a href="{{ url_for('settings') }}" class="nav-item">
-                <i class="fas fa-cog"></i>
-                <span>Settings</span>
-            </a>
-            <a href="{{ url_for('logout') }}" class="nav-item">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Logout</span>
-            </a>
-        </aside>
-
+       <!-- Sidebar -->
+<aside class="sidebar">
+    <a href="/dashboard" class="nav-item">
+        <i class="fas fa-home"></i>
+        <span>Dashboard</span>
+    </a>
+    <a href="/workout" class="nav-item">
+        <i class="fas fa-dumbbell"></i>
+        <span>Workout</span>
+    </a>
+    <a href="/progress" class="nav-item">
+        <i class="fas fa-chart-line"></i>
+        <span>Progress</span>
+    </a>
+    <a href="/recipes" class="nav-item">
+        <i class="fas fa-utensils"></i>
+        <span>Recipes</span>
+    </a>
+    <a href="/cycle" class="nav-item">
+        <i class="fas fa-female"></i>
+        <span>Cycle Tracking</span>
+    </a>
+    <a href="/blogs" class="nav-item">
+        <i class="fas fa-newspaper"></i>
+        <span>Blogs</span>
+    </a>
+    <a href="/calendar" class="nav-item">
+        <i class="fas fa-calendar-alt"></i>
+        <span>Calendar</span>
+    </a>
+    <a href="/snap" class="nav-item active">
+        <i class="fas fa-camera"></i>
+        <span>Snap</span>
+    </a>
+    <a href="/settings" class="nav-item">
+        <i class="fas fa-cog"></i>
+        <span>Settings</span>
+    </a>
+    <a href="/logout" class="nav-item">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+    </a>
+</aside>
         <!-- Main Content -->
         <main class="dashboard-content">
             <!-- Page Header -->
@@ -601,12 +694,72 @@
         </main>
     </div>
 
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
     <script>
         const predictButton = document.getElementById("predictButton");
         const manualLookupButton = document.getElementById("manualLookupButton");
         const saveButton = document.getElementById("saveButton");
+        const API_BASE = "http://127.0.0.1:8001"; // FastAPI API Server Port
 
         const unitToGrams = { grams: 1, ml: 1, cup: 240, plate: 350, tbsp: 15 };
+        let lastResult = null; // Store 100g base data and meal name
+        let lastInputMethod = null; // Track which method was used: 'image' or 'manual'
+
+        // Toast notification function
+        function showToast(message, type = 'info', duration = 5000) {
+            const toastContainer = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            let icon = 'info-circle';
+            if (type === 'success') icon = 'check-circle';
+            if (type === 'error') icon = 'exclamation-circle';
+            if (type === 'warning') icon = 'exclamation-triangle';
+            
+            toast.innerHTML = `
+                <i class="fas fa-${icon} toast-icon"></i>
+                <div class="toast-message">${message}</div>
+                <button class="toast-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // Show toast with animation
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10);
+            
+            // Close button functionality
+            const closeBtn = toast.querySelector('.toast-close');
+            closeBtn.addEventListener('click', () => {
+                toast.classList.remove('show');
+                toast.classList.add('hide');
+                setTimeout(() => {
+                    toastContainer.removeChild(toast);
+                }, 300);
+            });
+            
+            // Auto remove after duration
+            if (duration > 0) {
+                setTimeout(() => {
+                    if (toast.parentNode === toastContainer) {
+                        toast.classList.remove('show');
+                        toast.classList.add('hide');
+                        setTimeout(() => {
+                            if (toast.parentNode === toastContainer) {
+                                toastContainer.removeChild(toast);
+                            }
+                        }, 300);
+                    }
+                }, duration);
+            }
+            
+            return toast;
+        }
 
         // Quantity + buttons
         [["increaseQtyImage", "decreaseQtyImage", "quantityImage"],
@@ -621,110 +774,257 @@
             });
           });
 
+        function showLoading(button) {
+            button.disabled = true;
+            button.dataset.originalHtml = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            document.getElementById("resultCard").style.display = 'none';
+        }
+
+        function stopLoading(button, success = true) {
+            button.disabled = false;
+            button.innerHTML = button.dataset.originalHtml;
+            if (success) {
+                document.getElementById("resultCard").style.display = 'block';
+                document.getElementById("resultCard").classList.add('visible');
+            }
+        }
+
+        function calculateScaledMacros(nutrition, amount, quantity, unit) {
+            const totalGrams = (parseFloat(amount) || 1) * (unitToGrams[unit] || 1) * (parseFloat(quantity) || 1);
+            const factor = totalGrams / 100;
+
+            return {
+                calories: (nutrition.calories || 0) * factor,
+                protein: (nutrition.protein || 0) * factor,
+                carbs: (nutrition.carbs || 0) * factor,
+                fat: (nutrition.fat || 0) * factor,
+                grams: totalGrams,
+            };
+        }
+        
         // --- Predict from Image ---
         predictButton.addEventListener("click", async () => {
             const fileInput = document.getElementById("fileInput");
-            const amount = parseFloat(document.getElementById("gramsInputImage").value) || 100;
-            const quantity = parseFloat(document.getElementById("quantityImage").value) || 1;
-            const unit = document.getElementById("unitImage").value;
+            const gramsInputImage = document.getElementById("gramsInputImage");
+            const quantityImage = document.getElementById("quantityImage");
+            const unitImage = document.getElementById("unitImage");
+            
+            const amount = parseFloat(gramsInputImage.value) || 100;
+            const quantity = parseFloat(quantityImage.value) || 1;
+            const unit = unitImage.value;
             const totalGrams = amount * (unitToGrams[unit] || 1) * quantity;
 
-            if (!fileInput.files.length) return alert("Please upload an image.");
+            if (!fileInput.files.length) {
+                showToast("Please upload an image.", "warning");
+                return;
+            }
 
-            // Show loading state
-            predictButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
-            predictButton.disabled = true;
+            showLoading(predictButton);
 
             try {
                 const formData = new FormData();
                 formData.append("file", fileInput.files[0]);
-                formData.append("grams", totalGrams);
 
-                const res = await fetch("http://127.0.0.1:8000/predict", { method: "POST", body: formData });
+                const res = await fetch(`${API_BASE}/predict`, { method: "POST", body: formData });
                 const data = await res.json();
-                if (!res.ok) return alert(data.detail || "Error predicting food.");
+                
+                // --- CRITICAL FIX: Confidence Threshold Handling ---
+                if (res.status === 404 && data.detail === "UNCERTAIN_PREDICTION_FALLBACK_REQUIRED") {
+                    console.log("✅ Confidence threshold triggered - showing custom message");
+                    stopLoading(predictButton, false);
+                    document.getElementById("resultCard").style.display = 'none';
+                    showToast("This item cannot be used here because it is not in our trained database. Please enter the food name manually below.", "warning", 8000);
+                    return;
+                }
+                
+                if (!res.ok) {
+                    stopLoading(predictButton, false);
+                    showToast(data.detail || "Error predicting food.", "error");
+                    return;
+                }
 
-                displayResult(data.predicted_food, data.nutrition_info, totalGrams, quantity, unit);
+                // Store base 100g data
+                lastResult = {
+                    name: data.predicted_food,
+                    calories: data.nutrition_info.calories,
+                    protein: data.nutrition_info.protein,
+                    carbs: data.nutrition_info.carbs,
+                    fat: data.nutrition_info.fat,
+                };
+
+                // Track input method
+                lastInputMethod = 'image';
+
+                // Calculate scaled nutrition values
+                const scaledNutrition = calculateScaledMacros(
+                    data.nutrition_info, 
+                    amount, 
+                    quantity, 
+                    unit
+                );
+                
+                displayResult(data.predicted_food, scaledNutrition, totalGrams, quantity, unit);
             } catch (error) {
-                alert("Error connecting to the prediction service. Please try again.");
+                stopLoading(predictButton, false);
+                showToast("Error connecting to the prediction service. Please ensure the FastAPI server is running on port 8001.", "error");
                 console.error(error);
             } finally {
-                predictButton.innerHTML = '<i class="fas fa-search"></i> Predict Food';
-                predictButton.disabled = false;
+                stopLoading(predictButton, true);
             }
         });
 
         // --- Manual Lookup ---
         manualLookupButton.addEventListener("click", async () => {
             const foodInput = document.getElementById("manualFoodInput").value.trim();
-            const amount = parseFloat(document.getElementById("gramsInputManual").value) || 100;
-            const quantity = parseFloat(document.getElementById("quantityManual").value) || 1;
-            const unit = document.getElementById("unitManual").value;
+            const gramsInputManual = document.getElementById("gramsInputManual");
+            const quantityManual = document.getElementById("quantityManual");
+            const unitManual = document.getElementById("unitManual");
+            
+            const amount = parseFloat(gramsInputManual.value) || 100;
+            const quantity = parseFloat(quantityManual.value) || 1;
+            const unit = unitManual.value;
             const totalGrams = amount * (unitToGrams[unit] || 1) * quantity;
 
-            if (!foodInput) return alert("Enter a food name first.");
+            if (!foodInput) {
+                showToast("Enter a food name first.", "warning");
+                return;
+            }
 
-            // Show loading state
-            manualLookupButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Looking Up...';
-            manualLookupButton.disabled = true;
+            showLoading(manualLookupButton);
 
             try {
-                const res = await fetch("http://127.0.0.1:8000/manual-lookup", {
+                const res = await fetch(`${API_BASE}/manual-lookup`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ food_name: foodInput, grams: totalGrams }),
                 });
 
                 const data = await res.json();
-                if (!res.ok) return alert(data.detail || "Error in manual lookup.");
+                if (!res.ok) {
+                    showToast(data.detail || "Error in manual lookup.", "error");
+                    return;
+                }
 
+                // Store base 100g data
+                lastResult = {
+                    name: data.name,
+                    calories: data.calories,
+                    protein: data.protein,
+                    carbs: data.carbs,
+                    fat: data.fat,
+                };
+
+                // Track input method
+                lastInputMethod = 'manual';
+                
                 displayResult(data.name, data, totalGrams, quantity, unit);
+
             } catch (error) {
-                alert("Error connecting to the nutrition service. Please try again.");
+                stopLoading(manualLookupButton, false);
+                showToast("Error connecting to the nutrition service. Please ensure the FastAPI server is running on port 8001.", "error");
                 console.error(error);
             } finally {
-                manualLookupButton.innerHTML = '<i class="fas fa-chart-bar"></i> Lookup Nutrition';
-                manualLookupButton.disabled = false;
+                stopLoading(manualLookupButton, true);
             }
         });
 
         // --- Show Result ---
-        function displayResult(foodName, nutrition, grams, quantity, unit) {
+       function displayResult(foodName, nutrition, grams, quantity, unit) {
             const resultCard = document.getElementById("resultCard");
-            resultCard.style.display = 'block';
-            
-            // Trigger animation
+            resultCard.style.display = "block";
+
+            // Trigger smooth animation
             setTimeout(() => {
-                resultCard.classList.add('visible');
+                resultCard.classList.add("visible");
             }, 10);
-            
+
+            // Update displayed values
             document.getElementById("predictedFood").textContent = foodName;
-            document.getElementById("foodDetails").textContent = 
-    `${quantity} ${unit} ≈ ${grams.toFixed(1)}g`;
+            document.getElementById("foodDetails").textContent =
+                `${quantity} ${unit} ≈ ${grams.toFixed(1)}g`;
 
-
-            document.getElementById("calories").textContent = nutrition.calories ? nutrition.calories.toFixed(2) : "0";
-            document.getElementById("protein").textContent = nutrition.protein ? nutrition.protein.toFixed(2) : "0";
-            document.getElementById("carbs").textContent = nutrition.carbs ? nutrition.carbs.toFixed(2) : "0";
-            document.getElementById("fat").textContent = nutrition.fat ? nutrition.fat.toFixed(2) : "0";
+            document.getElementById("calories").textContent = nutrition.calories
+                ? nutrition.calories.toFixed(2)
+                : "0";
+            document.getElementById("protein").textContent = nutrition.protein
+                ? nutrition.protein.toFixed(2)
+                : "0";
+            document.getElementById("carbs").textContent = nutrition.carbs
+                ? nutrition.carbs.toFixed(2)
+                : "0";
+            document.getElementById("fat").textContent = nutrition.fat
+                ? nutrition.fat.toFixed(2)
+                : "0";
         }
 
         // --- Save Entry ---
-        saveButton.addEventListener("click", () => {
-            // Show success message
-            const originalText = saveButton.innerHTML;
-            saveButton.innerHTML = '<i class="fas fa-check"></i> Saved!';
-            saveButton.style.backgroundColor = '#28a745';
-            
-            setTimeout(() => {
-                saveButton.innerHTML = originalText;
-                saveButton.style.backgroundColor = '';
-            }, 2000);
+        saveButton.addEventListener("click", async () => {
+            if (!lastResult) {
+                showToast("Please predict or look up a food item first.", "warning");
+                return;
+            }
 
+            // Get user_id from session
+            const userId = {{ session.get('user_id') | tojson }};
             
-            // Here you would typically send data to your backend
-            // For now, we'll just show a confirmation
-            console.log("Food entry saved to database");
+            if (!userId) {
+                showToast("Please log in to save food entries.", "warning");
+                return;
+            }
+
+            let amount, quantity, unit;
+
+            // Determine which input fields to use based on last input method
+            if (lastInputMethod === 'image') {
+                amount = parseFloat(document.getElementById("gramsInputImage").value) || 100;
+                quantity = parseFloat(document.getElementById("quantityImage").value) || 1;
+                unit = document.getElementById("unitImage").value;
+            } else if (lastInputMethod === 'manual') {
+                amount = parseFloat(document.getElementById("gramsInputManual").value) || 100;
+                quantity = parseFloat(document.getElementById("quantityManual").value) || 1;
+                unit = document.getElementById("unitManual").value;
+            } else {
+                // Fallback to image inputs
+                amount = parseFloat(document.getElementById("gramsInputImage").value) || 100;
+                quantity = parseFloat(document.getElementById("quantityImage").value) || 1;
+                unit = document.getElementById("unitImage").value;
+            }
+
+            const totalGrams = amount * (unitToGrams[unit] || 1) * quantity;
+            const finalMacros = calculateScaledMacros(lastResult, amount, quantity, unit);
+
+            showLoading(saveButton);
+
+            try {
+                const mealData = {
+                    user_id: userId, // Use dynamic user_id from session
+                    food_name: lastResult.name,
+                    calories: finalMacros.calories,
+                    protein: finalMacros.protein,
+                    fat: finalMacros.fat,
+                    carbs: finalMacros.carbs,
+                    grams: totalGrams,
+                    unit: "g",
+                    log_date: new Date().toISOString().split("T")[0],
+                };
+
+                const res = await fetch(`${API_BASE}/add-meal-to-db`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(mealData),
+                });
+
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || "Failed to save entry.");
+
+                showToast("✅ Food entry saved successfully!", "success");
+            } catch (error) {
+                showToast(`⚠️ Error saving to DB: ${error.message}. Check FastAPI logs.`, "error");
+                console.error(error);
+            } finally {
+                stopLoading(saveButton, false);
+            }
         });
     </script>
 </body>

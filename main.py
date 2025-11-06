@@ -2,217 +2,257 @@ import torch
 import torch.nn as nn
 from torchvision import models, transforms
 from PIL import Image
-from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Request
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 import json
 import io
 import os
 import requests
-import mysql.connector
+import mysql.connector 
 from mysql.connector import Error
+from pydantic import BaseModel, Field
+from typing import Optional
 
-# --- Configuration ---
-model_path = r'C:\Users\suraj\Desktop\COGNIFIT\food_classifier_model.pth'
+# --- Configuration: Update these paths to your system ---
+# NOTE: These paths MUST be correct for your ML assets
+model_path = r'C:\Users\suraj\Desktop\COGNIFIT\food_classifier_model.pth' 
 nutrition_db_path = r'C:\Users\suraj\Desktop\COGNIFIT\nutrional_data.json'
-food_classification_path = r'C:\Users\suraj\Desktop\COGNIFIT\Food Classification'
+food_classification_path = r'C:\Users\suraj\Desktop\COGNIFIT\Food Classification' 
 
 # Gemini API configuration
 apiKey = "AIzaSyCL1lZnvs0WdrpNMMPHelJK6tsYXFg9hUM"
 apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
 
-# MySQL Database Config
+# --- Database Configuration ---
 DB_CONFIG = {
     'host': 'localhost',
     'user': 'root',
     'password': '',
-    'database': 'Cognifit'
+    'database': 'cognifit' 
 }
+# -----------------------------------
 
-# --- Load model and nutrition data ---
-class_names = sorted(os.listdir(food_classification_path))
-num_classes = len(class_names)
+# Pydantic Model for incoming and outgoing data
+class MealLogEntry(BaseModel):
+    user_id: int
+    food_name: str
+    calories: float
+    protein: float
+    fat: float
+    carbs: float
+    grams: float = Field(..., alias='grams') # Maps JS 'grams' to quantity_value
+    unit: str
+    log_date: str
 
-def load_model():
+# --- Load ML Assets ---
+try:
+    # 1. Load Classes
+    # CRITICAL FIX: Ensure path resolution for classes folder
+    class_names = sorted(os.listdir(food_classification_path))
+    num_classes = len(class_names)
+    
+    # 2. Load Model
     model = models.resnet18(weights='IMAGENET1K_V1')
-    for param in model.parameters():
-        param.requires_grad = False
+    for param in model.parameters(): param.requires_grad = False
     num_ftrs = model.fc.in_features
     model.fc = nn.Linear(num_ftrs, num_classes)
     model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
     model.eval()
-    return model
-
-try:
-    model = load_model()
+    
+    # 3. Load Nutrition Data
     with open(nutrition_db_path, 'r') as f:
         nutrition_data = json.load(f)
-    print("✅ Model and nutrition data loaded successfully.")
+        
+    print(f"✅ Food Model and Data loaded successfully for {num_classes} classes.")
+
 except Exception as e:
-    print(f"❌ FATAL ERROR loading model or nutrition data: {e}")
-    raise SystemExit(1)
+    # This block prevents the server from crashing immediately if ML assets are missing
+    print(f"❌ CRITICAL WARNING: ML asset loading failed ({e}). Image Prediction disabled.")
+    model = None
+    nutrition_data = {}
+    class_names = []
+
 
 # --- Preprocessing ---
 preprocess = transforms.Compose([
     transforms.Resize(224),
     transforms.CenterCrop(224),
     transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                         std=[0.229, 0.224, 0.225])
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
-# --- FastAPI setup ---
+# --- Setup FastAPI Application ---
 app = FastAPI()
+
+# --- Configure CORS middleware (CRITICAL for Flask to talk to FastAPI) ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# --- Helper: scale macros based on grams ---
-def scale_macros(nutrition, grams):
-    try:
-        grams = float(grams)
-    except ValueError:
-        grams = 100.0
-    factor = grams / 100
-    return {
-        "calories": round(nutrition.get("calories", 0) * factor, 2),
-        "protein": round(nutrition.get("protein", 0) * factor, 2),
-        "carbs": round(nutrition.get("carbs", 0) * factor, 2),
-        "fat": round(nutrition.get("fat", 0) * factor, 2)
-    }
-
-# --- Helper: save log to MySQL ---
-def save_log_to_db(food_name, nutrition_info, grams=100):
-    conn = None
+# -------------------------
+# Database Helper Functions (Personalized)
+# -------------------------
+def save_log_to_db_internal(meal: MealLogEntry):
+    """Internal function to save meal to database."""
+    conn = None 
     try:
         conn = mysql.connector.connect(**DB_CONFIG)
         cursor = conn.cursor()
+        
+        # --- FIXED QUERY TO MATCH THE 9 COLUMNS IN YOUR food_log TABLE ---
         sql_query = """
-        INSERT INTO food_log (food_name, calories, protein, carbs, fat, grams)
-        VALUES (%s, %s, %s, %s, %s, %s)
+        INSERT INTO food_log (user_id, food_name, calories, protein, fat, carbs, grams, log_date)
+        VALUES ( %s, %s, %s, %s, %s, %s, %s, %s)
         """
         data_tuple = (
-            food_name,
-            nutrition_info.get('calories'),
-            nutrition_info.get('protein'),
-            nutrition_info.get('carbs'),
-            nutrition_info.get('fat'),
-            grams
+            meal.user_id, meal.food_name, meal.calories, meal.protein, meal.fat, meal.carbs,
+            meal.grams,  meal.log_date
         )
+        
         cursor.execute(sql_query, data_tuple)
         conn.commit()
-        print(f"✅ Logged '{food_name}' ({grams} g) to database.")
+        return True
     except Error as e:
-        print(f"❌ Database Error: {e}")
+        print(f"❌ Database Write Error: {e}")
+        return False
     finally:
         if conn and conn.is_connected():
             cursor.close()
             conn.close()
 
-# --- POST: Predict Image ---
-@app.post("/predict")
-async def predict_food(file: UploadFile = File(...), grams: float = Form(100.0)):
+def get_logs_by_user_and_date(user_id: int, log_date: str):
+    """Fetches all food logs for a specific date and user."""
+    conn = None
+    logs = []
     try:
-        grams = float(grams)
+        conn = mysql.connector.connect(**DB_CONFIG)
+        cursor = conn.cursor(dictionary=True) 
+        query = "SELECT id, food_name, calories, protein, fat, carbs, grams, unit, log_date FROM food_log WHERE user_id = %s AND log_date = %s ORDER BY created_at DESC"
+        cursor.execute(query, (user_id, log_date,))
+        logs = cursor.fetchall()
+        return logs
+    except Error as e:
+        print(f"❌ Database Read Error: {e}")
+        return []
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+# -------------------------
+# API Endpoints
+# -------------------------
+
+@app.post("/predict")
+async def predict_food(file: UploadFile = File(...)):
+    """Handles image upload and runs ML model to return 100g data."""
+    if not model:
+         raise HTTPException(status_code=500, detail="Image prediction service is unavailable. Model failed to load.")
+
+    try:
         contents = await file.read()
-        if not file.content_type.startswith("image"):
+        img = Image.open(io.BytesIO(contents)).convert('RGB')
+        
+        if not file.content_type or not file.content_type.startswith("image"):
             raise HTTPException(status_code=400, detail="Invalid file type. Please upload an image.")
 
-        img = Image.open(io.BytesIO(contents)).convert('RGB')
+        # ML Prediction Logic...
         img_preprocessed = preprocess(img)
         input_tensor = img_preprocessed.unsqueeze(0)
-
+        
         with torch.no_grad():
             output = model(input_tensor)
+        
+        probabilities = torch.nn.functional.softmax(output[0], dim=0)
+        confidence = torch.max(probabilities).item()
+        
+        # --- CRITICAL FIX: Confidence Threshold Filter ---
+        CONFIDENCE_THRESHOLD = 0.60 # 60%
+        if confidence < CONFIDENCE_THRESHOLD:
+            # Tell the client that the prediction failed due to uncertainty
+            raise HTTPException(
+                status_code=404, 
+                detail="UNCERTAIN_PREDICTION_FALLBACK_REQUIRED"
+            )
+        
+        # Standard successful prediction if confidence is high
         _, predicted_idx = torch.max(output, 1)
         predicted_class = class_names[predicted_idx.item()]
-
-        nutrition = nutrition_data.get(predicted_class)
-        if not nutrition:
-            raise HTTPException(status_code=404, detail="Nutrition data not found for this food item.")
-
-        scaled_nutrition = scale_macros(nutrition, grams)
-        save_log_to_db(predicted_class, scaled_nutrition, grams)
-
+        
+        nutrition = nutrition_data.get(predicted_class, {"calories": 0.0, "protein": 0.0, "fat": 0.0, "carbs": 0.0})
+        
         return {
             "predicted_food": predicted_class,
-            "nutrition_info": scaled_nutrition,
-            "grams": grams
+            "nutrition_info": nutrition # Returns 100g data
         }
+    
+    except HTTPException:
+        # Re-raise the 404 from the confidence check
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# --- POST: Manual Gemini Lookup ---
+        print(f"❌ Error in /predict: {e}")
+        raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
+        
 @app.post("/manual-lookup")
 async def manual_lookup(request_data: dict):
+    """Uses Gemini API to get 100g nutritional data for manual entry."""
     try:
         food_name = request_data.get('food_name')
-        grams = float(request_data.get('grams', 100))
-
         if not food_name:
-            raise HTTPException(status_code=400, detail="Missing food_name in request.")
+            raise HTTPException(status_code=400, detail="Missing food name.")
         if not apiKey:
-            raise HTTPException(status_code=500, detail="Gemini API key not configured.")
+            raise HTTPException(status_code=500, detail="Gemini API key is not configured.")
 
-        user_query = f"Provide the calories (kcal), protein (g), fat (g), and carbs (g) for a 100 g serving of {food_name} in JSON format."
-
-        payload = {
-            "contents": [{"parts": [{"text": user_query}]}],
-            "generationConfig": {
-                "responseMimeType": "application/json",
-                "responseSchema": {
-                    "type": "OBJECT",
-                    "properties": {
-                        "calories": {"type": "number"},
-                        "protein": {"type": "number"},
-                        "fat": {"type": "number"},
-                        "carbs": {"type": "number"}
-                    },
-                }
-            }
-        }
-
+        # Gemini API Request Logic (Returns 100g JSON)
+        user_query = f"Provide the calories (kcal), protein (g), fat (g), and carbs (g) for a 100g serving of {food_name} in JSON format. Only provide the JSON object, do not include any other text, explanation, or backticks."
+        
+        payload = {"contents": [{"parts": [{"text": user_query}]}], "generationConfig": {"responseMimeType": "application/json", "responseSchema": {"type": "OBJECT", "properties": {"calories": {"type": "number"}, "protein": {"type": "number"}, "fat": {"type": "number"}, "carbs": {"type": "number"}}}}}
+        
         headers = {"Content-Type": "application/json"}
         response = requests.post(f"{apiUrl}?key={apiKey}", headers=headers, data=json.dumps(payload))
+        
         if response.status_code != 200:
             raise HTTPException(status_code=response.status_code, detail=f"Gemini API Error: {response.text}")
 
         result = response.json()
-        ai_text = result['candidates'][0]['content']['parts'][0]['text']
-        api_nutrition_data = json.loads(ai_text)
+        ai_response_text = result['candidates'][0]['content']['parts'][0]['text']
+        api_nutrition_data = json.loads(ai_response_text)
 
-        scaled_nutrition = scale_macros(api_nutrition_data, grams)
-        save_log_to_db(food_name, scaled_nutrition, grams)
-
+        # Returns flat 100g data required by frontend
         return {
-            "name": food_name,
-            "grams": grams,
-            "calories": scaled_nutrition["calories"],
-            "protein": scaled_nutrition["protein"],
-            "fat": scaled_nutrition["fat"],
-            "carbs": scaled_nutrition["carbs"]
+            "calories": api_nutrition_data.get("calories", 0),
+            "protein": api_nutrition_data.get("protein", 0),
+            "fat": api_nutrition_data.get("fat", 0),
+            "carbs": api_nutrition_data.get("carbs", 0),
+            "name": food_name
         }
+    
     except Exception as e:
+        print(f"❌ Error in /manual-lookup: {e}")
         raise HTTPException(status_code=500, detail=f"Manual lookup error: {str(e)}")
 
-# --- GET: Daily Logs ---
-@app.get("/logs")
-async def get_logs_for_today():
-    conn = None
-    try:
-        conn = mysql.connector.connect(**DB_CONFIG)
-        cursor = conn.cursor(dictionary=True)
-        query = "SELECT * FROM food_log WHERE DATE(log_date) = CURDATE() ORDER BY log_date DESC"
-        cursor.execute(query)
-        logs = cursor.fetchall()
-        return {"logs": logs}
-    except Error as e:
-        print(f"❌ Error fetching logs: {e}")
-        raise HTTPException(status_code=500, detail="Could not fetch logs.")
-    finally:
-        if conn and conn.is_connected():
-            cursor.close()
-            conn.close()
+@app.post("/add-meal-to-db")
+async def add_meal_to_db(meal: MealLogEntry):
+    """Saves a fully calculated meal entry to the food_log table."""
+    # The frontend is responsible for calculating scaled macros and including user_id
+    if save_log_to_db_internal(meal):
+        return {"success": True, "message": "Meal logged successfully."}
+    raise HTTPException(status_code=500, detail="Database insertion failed.")
+
+@app.get("/get-meals/{user_id}/{log_date}")
+async def get_meals(user_id: int, log_date: str):
+    """Fetches all food logs for a specific date and user."""
+    logs = get_logs_by_user_and_date(user_id, log_date)
+    return {"logs": logs}
+
+# -------------------------
+# Run the application (for standalone testing)
+# -------------------------
+if __name__ == '__main__':
+    import uvicorn
+    # CRITICAL: Runs on a separate port (8001) for the hybrid architecture.
+    uvicorn.run(app, host="0.0.0.0", port=8001)

@@ -369,7 +369,24 @@ def get_user_cycle_history(user_id):
     except Exception as e:
         print(f"Error getting user history: {e}")
         return []
-
+def get_user_weight(user_id):
+    """Get user's weight from onboarding data"""
+    try:
+        conn = mysql.connector.connect(**db_cognifit)
+        cur = conn.cursor()
+        
+        cur.execute("SELECT weight FROM user_onboarding WHERE user_id = %s", (user_id,))
+        result = cur.fetchone()
+        
+        cur.close()
+        conn.close()
+        
+        return result[0] if result else None
+        
+    except Exception as e:
+        print(f"Error fetching user weight: {e}")
+        return None
+    
 def calculate_bmi(weight_kg, height_cm):
     """Calculate BMI given weight in kg and height in cm"""
     if not weight_kg or not height_cm:
@@ -395,7 +412,7 @@ def get_bmi_category(bmi):
 # Workout Helper Functions
 # -------------------------
 
-def calculate_calories_burned(workout_type, duration_minutes, intensity_level):
+def calculate_calories_burned(user_id,workout_type, duration_minutes, intensity_level):
     """Calculate calories burned based on workout type, duration, and intensity"""
     # MET values for different workout types (calories burned per kg per hour)
     MET_VALUES = {
@@ -416,12 +433,20 @@ def calculate_calories_burned(workout_type, duration_minutes, intensity_level):
     }
     
     # Assume average weight of 70kg for calculation
-    weight_kg = 70
+    # Get user's actual weight from database
+    user_weight = get_user_weight(user_id)
+    
+    # If weight not available, fallback to 70kg
+    if not user_weight:
+        user_weight = 70
+    
+    weight_kg = user_weight
+
     met_value = MET_VALUES.get(workout_type, 5.0)
     intensity_multiplier = INTENSITY_MULTIPLIERS.get(intensity_level, 1.0)
     
     # Calories = MET * weight(kg) * time(hours) * intensity multiplier
-    calories = met_value * weight_kg * (duration_minutes / 60) * intensity_multiplier
+    calories = met_value * float(weight_kg) * (float(duration_minutes) / 60) * intensity_multiplier
     return int(calories)
 
 def get_workout_stats(user_id):
@@ -1903,7 +1928,7 @@ def create_workout():
         return jsonify({"success": False, "message": "Missing required fields"}), 400
     
     # Calculate calories burned
-    calories_burned = calculate_calories_burned(workout_type, duration_minutes, intensity_level)
+    calories_burned = calculate_calories_burned(user_id,workout_type, duration_minutes, intensity_level)
     
     try:
         conn = mysql.connector.connect(**db_cognifit)

@@ -40,6 +40,228 @@
         }
 
         /* ============================================== */
+        /* TOAST NOTIFICATIONS */
+        /* ============================================== */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+        }
+
+        .toast {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border-left: 4px solid var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            max-width: 350px;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast.hide {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+
+        .toast.success {
+            border-left-color: #10b981;
+        }
+
+        .toast.error {
+            border-left-color: #ef4444;
+        }
+
+        .toast.warning {
+            border-left-color: #f59e0b;
+        }
+
+        .toast.info {
+            border-left-color: #3b82f6;
+        }
+
+        .toast-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .toast.success .toast-icon {
+            background: #10b981;
+        }
+
+        .toast.error .toast-icon {
+            background: #ef4444;
+        }
+
+        .toast.warning .toast-icon {
+            background: #f59e0b;
+        }
+
+        .toast.info .toast-icon {
+            background: #3b82f6;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-dark);
+            margin-bottom: 4px;
+        }
+
+        .toast-message {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .toast-close:hover {
+            color: #6b7280;
+            background: #f3f4f6;
+        }
+
+        /* ============================================== */
+        /* CONFIRMATION MODAL */
+        /* ============================================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .modal-overlay.show .modal {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-icon {
+            width: 60px;
+            height: 60px;
+            background: #fee2e2;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 24px;
+            color: #dc2626;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .modal-message {
+            color: #666;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-btn.cancel {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .modal-btn.cancel:hover {
+            background: #e5e7eb;
+        }
+
+        .modal-btn.confirm {
+            background: #dc2626;
+            color: white;
+        }
+
+        .modal-btn.confirm:hover {
+            background: #b91c1c;
+        }
+
+        /* ============================================== */
         /* DASHBOARD LAYOUT */
         /* ============================================== */
         .dashboard-container {
@@ -397,6 +619,12 @@
             .results-grid {
                 grid-template-columns: 1fr;
             }
+
+            .toast-container {
+                right: 10px;
+                left: 10px;
+                max-width: none;
+            }
         }
 
         @media (max-width: 768px) {
@@ -430,6 +658,9 @@
     </style>
 </head>
 <body>
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" class="toast-container"></div>
+
     <div class="dashboard-container">
         <!-- Header -->
         <header class="dashboard-header">
@@ -587,8 +818,90 @@
     </div>
 
     <script>
-        // Load history from localStorage
-        let cycleHistory = JSON.parse(localStorage.getItem('cycleHistory')) || [];
+        // Toast Notification System
+        function showToast(type, title, message, duration = 4000) {
+            const toastContainer = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                success: 'fas fa-check',
+                error: 'fas fa-exclamation-circle',
+                warning: 'fas fa-exclamation-triangle',
+                info: 'fas fa-info-circle'
+            };
+
+            toast.innerHTML = `
+                <div class="toast-icon">
+                    <i class="${icons[type]}"></i>
+                </div>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+
+            toastContainer.appendChild(toast);
+
+            // Show toast with animation
+            setTimeout(() => toast.classList.add('show'), 100);
+
+            // Auto remove after duration
+            if (duration > 0) {
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    toast.classList.add('hide');
+                    setTimeout(() => toast.remove(), 400);
+                }, duration);
+            }
+
+            return toast;
+        }
+
+        // Confirmation Modal System
+        function showConfirmation(message, onConfirm) {
+            const modalHTML = `
+                <div class="modal-overlay" id="confirmation-modal">
+                    <div class="modal">
+                        <div class="modal-header">
+                            <div class="modal-icon">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <h3 class="modal-title">Confirm Action</h3>
+                            <p class="modal-message">${message}</p>
+                        </div>
+                        <div class="modal-actions">
+                            <button class="modal-btn cancel" onclick="hideConfirmation()">Cancel</button>
+                            <button class="modal-btn confirm" onclick="confirmAction()">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            const modal = document.getElementById('confirmation-modal');
+            
+            setTimeout(() => modal.classList.add('show'), 10);
+
+            window.confirmAction = function() {
+                onConfirm();
+                hideConfirmation();
+            };
+
+            window.hideConfirmation = function() {
+                modal.classList.remove('show');
+                setTimeout(() => modal.remove(), 300);
+            };
+        }
+
+        // Get current user ID from the session
+        const currentUserId = "{{ session.get('user_id', '') }}";
+        
+        // Load history from localStorage with user-specific key
+        let cycleHistory = JSON.parse(localStorage.getItem(`cycleHistory_${currentUserId}`)) || [];
 
         // Get today's date for validation
         const today = new Date();
@@ -686,7 +999,7 @@
             
             // Validate all dates before processing
             if (!validateAllDates()) {
-                alert('Please correct the date errors before submitting. Future dates are not allowed.');
+                showToast('error', 'Invalid Dates', 'Please correct the date errors before submitting. Future dates are not allowed.');
                 return;
             }
             
@@ -700,7 +1013,7 @@
             ].filter(date => date !== ''); // Remove empty dates
 
             if (dates.length < 3) {
-                alert('Please enter at least 3 period dates for accurate prediction.');
+                showToast('warning', 'More Data Needed', 'Please enter at least 3 period dates for accurate prediction.');
                 return;
             }
 
@@ -734,12 +1047,15 @@
                     
                     // Add to local history
                     addToHistory(dates[dates.length - 1], result.avg_cycle_length, result.cycle_lengths);
+                    
+                    // Show success toast
+                    showToast('success', 'Cycle Calculated!', 'Your next period and fertility window have been predicted successfully.');
                 } else {
-                    alert('Error: ' + result.message);
+                    showToast('error', 'Calculation Error', result.message || 'Failed to calculate cycle prediction.');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Network error. Please try again.');
+                showToast('error', 'Network Error', 'Unable to calculate cycle prediction. Please try again.');
             } finally {
                 // Restore button state
                 submitBtn.innerHTML = originalText;
@@ -766,10 +1082,6 @@
                     <div class="result-item">
                         <span>Average Cycle Length:</span>
                         <span class="result-value">${Math.round(result.avg_cycle_length)} days</span>
-                    </div>
-                    <div class="result-item">
-                        <span>Prediction Method:</span>
-                        <span class="result-value">${prediction.method.toUpperCase()}</span>
                     </div>
                 </div>
                 
@@ -836,7 +1148,8 @@
                 periodDate: periodDate,
                 avgCycleLength: Math.round(avgCycleLength),
                 cycleLengths: cycleLengths,
-                calculatedAt: new Date().toISOString()
+                calculatedAt: new Date().toISOString(),
+                userId: currentUserId // Add user ID to track ownership
             };
             
             cycleHistory.unshift(entry);
@@ -846,8 +1159,8 @@
                 cycleHistory = cycleHistory.slice(0, 10);
             }
             
-            // Save to localStorage
-            localStorage.setItem('cycleHistory', JSON.stringify(cycleHistory));
+            // Save to localStorage with user-specific key
+            localStorage.setItem(`cycleHistory_${currentUserId}`, JSON.stringify(cycleHistory));
             
             // Update display
             displayHistory();
@@ -856,7 +1169,10 @@
         function displayHistory() {
             const container = document.getElementById('historyTableContainer');
             
-            if (cycleHistory.length === 0) {
+            // Filter history to only show entries for current user
+            const userHistory = cycleHistory.filter(entry => entry.userId === currentUserId);
+            
+            if (userHistory.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-calendar-times"></i>
@@ -879,7 +1195,7 @@
                     <tbody>
             `;
             
-            cycleHistory.forEach(entry => {
+            userHistory.forEach(entry => {
                 const periodDate = new Date(entry.periodDate);
                 const calculatedDate = new Date(entry.calculatedAt);
                 
@@ -909,13 +1225,18 @@
         }
 
         function clearHistory() {
-            if (confirm('Are you sure you want to clear your local browser history? This will not affect data saved on the server.')) {
-                cycleHistory = [];
-                localStorage.removeItem('cycleHistory');
-                displayHistory();
-                document.getElementById('resultsSection').style.display = 'none';
-                setDefaultDates();
-            }
+            showConfirmation(
+                'Are you sure you want to clear your cycle history? This action cannot be undone.',
+                function() {
+                    // Clear only the current user's history
+                    cycleHistory = cycleHistory.filter(entry => entry.userId !== currentUserId);
+                    localStorage.setItem(`cycleHistory_${currentUserId}`, JSON.stringify([]));
+                    displayHistory();
+                    document.getElementById('resultsSection').style.display = 'none';
+                    setDefaultDates();
+                    showToast('success', 'History Cleared', 'Your cycle history has been cleared successfully.');
+                }
+            );
         }
     </script>
 </body>
