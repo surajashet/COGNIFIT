@@ -7,13 +7,19 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* ============================================== */
+        /* GLOBAL VARIABLES & RESET */
+        /* ============================================== */
         :root {
             --primary-color: #abc85f;
-            --secondary-color: #AE523A;
+            --secondary-color: #a3391a;
+            --accent-color: #6A8CAF;
             --text-dark: #2c2c2c;
             --text-light: #fff;
             --bg-light: #f7f7f7;
+            --bg-gray: #f0f0f0;
             --card-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            --hover-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
             --border-radius: 12px;
             --font-family: 'Poppins', sans-serif;
         }
@@ -26,89 +32,260 @@
 
         body {
             font-family: var(--font-family);
-            background-color: var(--bg-light);
             color: var(--text-dark);
+            line-height: 1.5;
+            background-color: var(--bg-light);
+            min-height: 100vh;
+            font-size: 14px;
         }
 
-        .admin-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
+        /* ============================================== */
+        /* DASHBOARD LAYOUT */
+        /* ============================================== */
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            grid-template-rows: 60px 1fr;
+            min-height: 100vh;
         }
 
-        .admin-header {
+        /* Header */
+        .dashboard-header {
+            grid-column: 1 / -1;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid var(--primary-color);
+            padding: 0 20px;
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            z-index: 100;
         }
 
-        .admin-title {
-            font-size: 28px;
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 20px;
             font-weight: 700;
         }
 
-        .btn {
-            padding: 10px 20px;
+        .logo i {
+            margin-right: 8px;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            font-size: 14px;
+        }
+
+        /* Admin Button */
+        .admin-btn {
+            background: var(--secondary-color);
+            color: white;
             border: none;
-            border-radius: var(--border-radius);
+            padding: 10px 20px;
+            border-radius: 50px;
             font-family: var(--font-family);
             font-weight: 500;
             cursor: pointer;
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 15px;
             text-decoration: none;
-            display: inline-flex;
+        }
+
+        .admin-btn:hover {
+            background: #8c3c2a;
+            transform: translateY(-2px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background-color: var(--text-light);
+            padding: 20px 0;
+            box-shadow: var(--card-shadow);
+            z-index: 90;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--text-dark);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: rgba(171, 200, 95, 0.15);
+            color: var(--primary-color);
+            border-right: 3px solid var(--primary-color);
+        }
+
+        .nav-item i {
+            margin-right: 12px;
+            width: 18px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        /* Main Content */
+        .dashboard-content {
+            padding: 20px;
+            background-color: var(--bg-light);
+            overflow-y: auto;
+        }
+
+        /* Admin Page Specific Styles */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-dark);
+            position: relative;
+            padding-bottom: 8px;
+        }
+
+        .page-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 3px;
+        }
+
+        /* Admin Controls */
+        .admin-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-family: var(--font-family);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .btn-primary {
-            background-color: var(--primary-color);
-            color: var(--text-light);
-        }
-
         .btn-primary:hover {
-            background-color: #9ab855;
+            background: #95b355;
+            transform: translateY(-2px);
         }
 
         .btn-secondary {
-            background-color: #6c757d;
-            color: var(--text-light);
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-family: var(--font-family);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
         }
 
         .btn-danger {
-            background-color: #dc3545;
-            color: var(--text-light);
-        }
-
-        .btn-sm {
-            padding: 5px 10px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
             font-size: 12px;
+            transition: all 0.2s ease;
         }
 
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        /* Blogs Table */
         .blogs-table {
             background: white;
             border-radius: var(--border-radius);
-            box-shadow: var(--card-shadow);
             overflow: hidden;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            padding: 15px;
-            text-align: left;
+        .table-header {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+            gap: 15px;
+            padding: 15px 20px;
+            background: var(--bg-gray);
+            font-weight: 600;
             border-bottom: 1px solid #eee;
         }
 
-        th {
-            background-color: #f8f9fa;
-            font-weight: 600;
+        .table-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+            gap: 15px;
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            align-items: center;
+        }
+
+        .table-row:hover {
+            background: var(--bg-gray);
+        }
+
+        .table-row:last-child {
+            border-bottom: none;
         }
 
         .status-published {
@@ -122,11 +299,47 @@
         }
 
         .featured-badge {
-            background: var(--primary-color);
+            background: var(--secondary-color);
             color: white;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-edit {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-edit:hover {
+            background: #5a7a9a;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
         }
 
         /* Modal Styles */
@@ -137,7 +350,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.7);
             z-index: 2000;
             overflow-y: auto;
             padding: 20px;
@@ -150,26 +363,38 @@
             border-radius: var(--border-radius);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             overflow: hidden;
+            position: relative;
         }
 
         .modal-header {
-            padding: 20px 30px;
+            padding: 20px 25px;
             border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            position: relative;
         }
 
         .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
             background: none;
             border: none;
             font-size: 24px;
             cursor: pointer;
             color: #888;
+            transition: color 0.2s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--secondary-color);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
         }
 
         .modal-body {
-            padding: 30px;
+            padding: 25px;
         }
 
         .form-group {
@@ -184,9 +409,9 @@
 
         .form-control {
             width: 100%;
-            padding: 12px 15px;
+            padding: 10px 12px;
             border: 1px solid #ddd;
-            border-radius: var(--border-radius);
+            border-radius: 4px;
             font-family: var(--font-family);
             font-size: 14px;
         }
@@ -194,11 +419,12 @@
         .form-control:focus {
             outline: none;
             border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(171, 200, 95, 0.2);
         }
 
         textarea.form-control {
-            min-height: 200px;
             resize: vertical;
+            min-height: 100px;
         }
 
         .form-row {
@@ -207,147 +433,311 @@
             gap: 15px;
         }
 
-        .checkbox-group {
+        .form-check {
             display: flex;
             align-items: center;
+            gap: 8px;
+        }
+
+        .form-check input {
+            margin: 0;
+        }
+
+        .modal-footer {
+            padding: 20px 25px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: flex-end;
             gap: 10px;
         }
 
-        .checkbox-group input {
-            width: auto;
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
         }
 
-        /* Toast Notification Styles */
+        .loading i {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+
+        /* No Blogs Message */
+        .no-blogs {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .no-blogs i {
+            font-size: 4rem;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+
+        .no-blogs h3 {
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+
+        /* Toasts */
         .toast-container {
             position: fixed;
-            top: 20px;
             right: 20px;
+            top: 20px;
             z-index: 9999;
             display: flex;
             flex-direction: column;
             gap: 10px;
+            width: 320px;
+            max-width: calc(100% - 40px);
         }
 
         .toast {
-            padding: 15px 20px;
-            border-radius: var(--border-radius);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            color: white;
             display: flex;
-            align-items: center;
             gap: 12px;
-            max-width: 350px;
-            transform: translateX(400px);
-            opacity: 0;
-            transition: all 0.3s ease;
+            align-items: flex-start;
+            padding: 12px 14px;
+            border-radius: 10px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+            color: #fff;
+            font-weight: 500;
+            animation: toast-in 0.18s ease;
         }
 
-        .toast.show {
-            transform: translateX(0);
-            opacity: 1;
+        @keyframes toast-in {
+            from { transform: translateY(-6px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
-        .toast.hide {
-            transform: translateX(400px);
-            opacity: 0;
-        }
-
-        .toast-success {
-            background-color: var(--primary-color);
-        }
-
-        .toast-error {
-            background-color: #dc3545;
-        }
-
-        .toast-warning {
-            background-color: #f39c12;
-        }
-
-        .toast-info {
-            background-color: #3498db;
-        }
-
-        .toast-icon {
-            font-size: 18px;
-        }
-
-        .toast-message {
+        .toast .toast-body {
             flex: 1;
             font-size: 14px;
-            font-weight: 500;
+            line-height: 1.2;
         }
 
-        .toast-close {
-            background: none;
+        .toast .toast-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .toast .toast-close {
+            background: transparent;
             border: none;
-            color: white;
+            color: rgba(255,255,255,0.9);
             cursor: pointer;
-            font-size: 16px;
-            padding: 0;
-            width: 20px;
-            height: 20px;
-            display: flex;
+            font-size: 14px;
+        }
+
+        .toast-success { background: linear-gradient(90deg, #6bbf4a, #4ba74a); }
+        .toast-error   { background: linear-gradient(90deg, #e34a4a, #d12f2f); }
+        .toast-info    { background: linear-gradient(90deg, #6A8CAF, #5a7a9a); }
+
+        /* Confirm modal (small) */
+        .confirm-modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10,10,10,0.45);
             align-items: center;
             justify-content: center;
+            padding: 20px;
+        }
+
+        .confirm-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+        }
+
+        .confirm-card h3 {
+            margin-bottom: 12px;
+            color: var(--text-dark);
+        }
+
+        .confirm-card p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .confirm-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .confirm-btn {
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .confirm-btn.cancel {
+            background: #e9ecef;
+            color: var(--text-dark);
+        }
+
+        .confirm-btn.confirm {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+            
+            .table-header, .table-row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .action-buttons {
+                justify-content: flex-start;
+            }
         }
 
         @media (max-width: 768px) {
-            .toast-container {
-                top: 10px;
-                right: 10px;
-                left: 10px;
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
             }
-
-            .toast {
-                max-width: 100%;
+            
+            .admin-controls {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
-    <div class="admin-container">
-        <div class="admin-header">
-            <h1 class="admin-title">Manage Blogs</h1>
-            <div>
-                <a href="{{ url_for('blogs') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Back to Blogs
-                </a>
-                <button class="btn btn-primary" onclick="openCreateModal()">
-                    <i class="fas fa-plus"></i> Create New Blog
-                </button>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="logo">
+                <i class="fas fa-newspaper"></i>
+                <span>Manage Blogs</span>
             </div>
-        </div>
+            
+            <div class="user-menu">
+                <a href="{{ url_for('blogs') }}" class="admin-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Blogs
+                </a>
+                <div class="user-menu">
+                {% if session.get('user_id') %}
+                    <div class="user-profile">
+                        <div class="avatar">{{ session.get('username')[0]|upper if session.get('username') else 'U' }}</div>
+                        <span>{{ session.get('username', 'User') }}</span>
+                    </div>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-primary" style="margin-right:10px;">Login</a>
+                    <a href="{{ url_for('signup') }}" class="btn btn-primary">Signup</a>
+                {% endif %}
+            </div>
+            </div>
+        </header>
 
-        <div class="blogs-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Category</th>
-                        <th>Author</th>
-                        <th>Status</th>
-                        <th>Featured</th>
-                        <th>Created</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="blogsTableBody">
-                    <tr>
-                        <td colspan="7" style="text-align: center; padding: 40px;">
-                            <i class="fas fa-spinner fa-spin"></i> Loading blogs...
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <a href="{{ url_for('dashboard') }}" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ url_for('progress') }}" class="nav-item {% if request.path == '/progress' %}active{% endif %}">
+                <i class="fas fa-chart-line"></i>
+                <span>Progress</span>
+            </a>
+            <a href="{{ url_for('recipes') }}" class="nav-item">
+                <i class="fas fa-utensils"></i>
+                <span>Recipes</span>
+            </a>
+            <a href="{{ url_for('cycle_form') }}" class="nav-item">
+                <i class="fas fa-female"></i>
+                <span>Cycle Tracking</span>
+            </a>
+            <a href="{{ url_for('blogs') }}" class="nav-item active">
+                <i class="fas fa-newspaper"></i>
+                <span>Blogs</span>
+            </a>
+            <a href="{{ url_for('calendar') }}" class="nav-item">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Calendar</span>
+            </a>
+            <a href="#" class="nav-item" onclick="alert('Snap feature coming soon!')">
+                <i class="fas fa-camera"></i>
+                <span>Snap</span>
+            </a>
+            <a href="{{ url_for('settings') }}" class="nav-item">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+            <a href="{{ url_for('logout') }}" class="nav-item">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="dashboard-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1 class="page-title">Manage Blogs</h1>
+                <div class="admin-controls">
+                    <button class="btn-primary" onclick="openCreateModal()">
+                        <i class="fas fa-plus"></i> Create New Blog
+                    </button>
+                </div>
+            </div>
+
+            <!-- Blogs Table -->
+            <div class="blogs-table">
+                <div class="table-header">
+                    <div>Title</div>
+                    <div>Category</div>
+                    <div>Author</div>
+                    <div>Status</div>
+                    <div>Featured</div>
+                    <div>Created</div>
+                    <div>Actions</div>
+                </div>
+                <div id="blogsTableBody">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Loading blogs...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 
     <!-- Create/Edit Blog Modal -->
     <div class="modal" id="blogModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="modalTitle">Create New Blog</h2>
+                <h2 class="modal-title" id="modalTitle">Create New Blog</h2>
                 <button class="modal-close" onclick="closeModal()">&times;</button>
             </div>
             <div class="modal-body">
@@ -397,7 +787,7 @@
                     </div>
 
                     <div class="form-row">
-                        <div class="form-group checkbox-group">
+                        <div class="form-group form-check">
                             <input type="checkbox" id="is_featured">
                             <label for="is_featured">Feature this blog</label>
                         </div>
@@ -410,9 +800,9 @@
                         </div>
                     </div>
 
-                    <div class="form-group" style="text-align: right; margin-top: 30px;">
-                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Blog</button>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+                        <button type="submit" class="btn-primary">Save Blog</button>
                     </div>
                 </form>
             </div>
@@ -422,263 +812,312 @@
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
+    <!-- Confirm modal -->
+    <div class="confirm-modal" id="confirmModal" role="dialog" aria-modal="true">
+        <div class="confirm-card" id="confirmCard">
+            <h3 id="confirmTitle">Confirm</h3>
+            <p id="confirmMessage">Are you sure?</p>
+            <div class="confirm-actions">
+                <button class="confirm-btn cancel" id="confirmCancel">Cancel</button>
+                <button class="confirm-btn confirm" id="confirmOk">Yes, delete</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Toast notification function
-        function showToast(message, type = 'info', duration = 5000) {
-            const toastContainer = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast toast-${type}`;
-            
-            let icon = 'info-circle';
-            if (type === 'success') icon = 'check-circle';
-            if (type === 'error') icon = 'exclamation-circle';
-            if (type === 'warning') icon = 'exclamation-triangle';
-            
-            toast.innerHTML = `
-                <i class="fas fa-${icon} toast-icon"></i>
-                <div class="toast-message">${message}</div>
-                <button class="toast-close">
-                    <i class="fas fa-times"></i>
-                </button>
-            `;
-            
-            toastContainer.appendChild(toast);
-            
-            // Show toast with animation
-            setTimeout(() => {
-                toast.classList.add('show');
-            }, 10);
-            
-            // Close button functionality
-            const closeBtn = toast.querySelector('.toast-close');
-            closeBtn.addEventListener('click', () => {
-                toast.classList.remove('show');
-                toast.classList.add('hide');
-                setTimeout(() => {
-                    toastContainer.removeChild(toast);
-                }, 300);
-            });
-            
-            // Auto remove after duration
-            if (duration > 0) {
-                setTimeout(() => {
-                    if (toast.parentNode === toastContainer) {
-                        toast.classList.remove('show');
-                        toast.classList.add('hide');
-                        setTimeout(() => {
-                            if (toast.parentNode === toastContainer) {
-                                toastContainer.removeChild(toast);
-                            }
-                        }, 300);
-                    }
-                }, duration);
-            }
-            
-            return toast;
+    // Toast notification function
+    function showToast(type = 'info', title = '', message = '', duration = 4000) {
+        const toastContainer = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.setAttribute('role', 'status');
+
+        const body = document.createElement('div');
+        body.className = 'toast-body';
+
+        if (title) {
+            const t = document.createElement('div');
+            t.className = 'toast-title';
+            t.textContent = title;
+            body.appendChild(t);
         }
 
-        let currentEditingId = null;
+        if (message) {
+            const m = document.createElement('div');
+            m.className = 'toast-message';
+            m.textContent = message;
+            body.appendChild(m);
+        }
 
-        // Load blogs on page load
-        document.addEventListener('DOMContentLoaded', loadBlogs);
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'toast-close';
+        closeBtn.innerHTML = '&times;';
+        closeBtn.onclick = () => {
+            toastContainer.removeChild(toast);
+        };
 
-        async function loadBlogs() {
-            try {
-                const response = await fetch('/admin/get_blogs');
-                const result = await response.json();
-                
-                const tbody = document.getElementById('blogsTableBody');
-                
-                if (result.success && result.blogs.length > 0) {
-                    tbody.innerHTML = result.blogs.map(blog => `
-                        <tr>
-                            <td>${blog.title}</td>
-                            <td>${blog.category}</td>
-                            <td>${blog.author}</td>
-                            <td><span class="status-${blog.status}">${blog.status}</span></td>
-                            <td>${blog.is_featured ? '<span class="featured-badge">Featured</span>' : ''}</td>
-                            <td>${new Date(blog.created_at).toLocaleDateString()}</td>
-                            <td>
-                                <button class="btn btn-primary btn-sm" onclick="editBlog(${blog.id})">
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
-                                <button class="btn btn-danger btn-sm" onclick="deleteBlog(${blog.id})">
-                                    <i class="fas fa-trash"></i> Delete
-                                </button>
-                            </td>
-                        </tr>
-                    `).join('');
-                } else {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="7" style="text-align: center; padding: 40px;">
-                                No blogs found. <a href="#" onclick="openCreateModal()">Create your first blog</a>.
-                            </td>
-                        </tr>
+        toast.appendChild(body);
+        toast.appendChild(closeBtn);
+
+        if (type === 'success') toast.classList.add('toast-success');
+        else if (type === 'error') toast.classList.add('toast-error');
+        else toast.classList.add('toast-info');
+
+        toastContainer.appendChild(toast);
+
+        if (duration > 0) {
+            setTimeout(() => {
+                if (toast.parentElement) toastContainer.removeChild(toast);
+            }, duration);
+        }
+    }
+
+    /***********************
+     * Confirm modal utils
+     ***********************/
+    const confirmModal = document.getElementById('confirmModal');
+    const confirmTitleEl = document.getElementById('confirmTitle');
+    const confirmMessageEl = document.getElementById('confirmMessage');
+    const confirmCancelBtn = document.getElementById('confirmCancel');
+    const confirmOkBtn = document.getElementById('confirmOk');
+
+    function showConfirm(title = 'Confirm', message = 'Are you sure?') {
+        return new Promise((resolve) => {
+            confirmTitleEl.textContent = title;
+            confirmMessageEl.textContent = message;
+            confirmModal.style.display = 'flex';
+
+            function cleanup(result) {
+                confirmModal.style.display = 'none';
+                confirmCancelBtn.removeEventListener('click', onCancel);
+                confirmOkBtn.removeEventListener('click', onOk);
+                resolve(result);
+            }
+
+            function onCancel() { cleanup(false); }
+            function onOk() { cleanup(true); }
+
+            confirmCancelBtn.addEventListener('click', onCancel);
+            confirmOkBtn.addEventListener('click', onOk);
+        });
+    }
+
+    // Close confirm on Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && confirmModal.style.display === 'flex') {
+            confirmModal.style.display = 'none';
+        }
+    });
+
+    let currentEditingId = null;
+    // Ensure currentUserId is a number
+    const currentUserId = parseInt("{{ session.get('user_id', 0) }}");
+
+    // Load blogs on page load
+    document.addEventListener('DOMContentLoaded', loadBlogs);
+
+    async function loadBlogs() {
+        try {
+            const response = await fetch('/admin/get_blogs');
+            const result = await response.json();
+            
+            const tbody = document.getElementById('blogsTableBody');
+            
+            if (result.success && result.blogs.length > 0) {
+                tbody.innerHTML = result.blogs.map(blog => {
+                    // Convert both to numbers for proper comparison
+                    const blogUserId = parseInt(blog.user_id) || 0;
+                    const currentUser = parseInt(currentUserId) || 0;
+                    const isOwner = blogUserId === currentUser;
+                    
+                    const actionButtons = isOwner ? 
+                        `<div class="action-buttons">
+                            <button class="btn-edit" onclick="editBlog(${blog.id})">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn-delete" onclick="deleteBlog(${blog.id})">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>` :
+                        `<div style="color: #6c757d; font-style: italic; font-size: 12px;">View Only</div>`;
+                    
+                    return `
+                        <div class="table-row">
+                            <div>${blog.title}</div>
+                            <div>${blog.category}</div>
+                            <div>${blog.author}</div>
+                            <div><span class="status-${blog.status}">${blog.status}</span></div>
+                            <div>${blog.is_featured ? '<span class="featured-badge">Featured</span>' : '-'}</div>
+                            <div>${new Date(blog.created_at).toLocaleDateString()}</div>
+                            ${actionButtons}
+                        </div>
                     `;
-                }
-            } catch (error) {
-                console.error('Error loading blogs:', error);
-                document.getElementById('blogsTableBody').innerHTML = `
-                    <tr>
-                        <td colspan="7" style="text-align: center; padding: 40px; color: #dc3545;">
-                            Error loading blogs. Please try again.
-                        </td>
-                    </tr>
+                }).join('');
+            } else {
+                tbody.innerHTML = `
+                    <div class="no-blogs">
+                        <i class="fas fa-newspaper"></i>
+                        <h3>No Blogs Found</h3>
+                        <p>Create your first blog to get started!</p>
+                    </div>
                 `;
             }
-        }
-
-        function openCreateModal() {
-            currentEditingId = null;
-            document.getElementById('modalTitle').textContent = 'Create New Blog';
-            document.getElementById('blogForm').reset();
-            document.getElementById('blogId').value = '';
-            document.getElementById('status').value = 'published';
-            document.getElementById('is_featured').checked = false;
-            document.getElementById('blogModal').style.display = 'block';
-        }
-
-        async function editBlog(blogId) {
-            try {
-                const response = await fetch(`/get_blog/${blogId}`);
-                const result = await response.json();
-                
-                if (result.success) {
-                    const blog = result.blog;
-                    currentEditingId = blogId;
-                    
-                    document.getElementById('modalTitle').textContent = 'Edit Blog';
-                    document.getElementById('blogId').value = blogId;
-                    document.getElementById('title').value = blog.title;
-                    document.getElementById('category').value = blog.category;
-                    document.getElementById('category_color').value = blog.category_color || '#abc85f';
-                    document.getElementById('author').value = blog.author;
-                    document.getElementById('read_time').value = blog.read_time;
-                    document.getElementById('image_url').value = blog.image_url || '';
-                    document.getElementById('excerpt').value = blog.excerpt || '';
-                    document.getElementById('content').value = blog.content;
-                    document.getElementById('status').value = 'published'; // You might want to fetch this from the blog data
-                    document.getElementById('is_featured').checked = false; // You might want to fetch this from the blog data
-                    
-                    document.getElementById('blogModal').style.display = 'block';
-                } else {
-                    showToast('Error loading blog: ' + result.message, 'error');
-                }
-            } catch (error) {
-                console.error('Error loading blog for edit:', error);
-                showToast('Error loading blog. Please try again.', 'error');
-            }
-        }
-
-        async function deleteBlog(blogId) {
-            // Create a custom confirmation toast
-            const confirmToast = showToast(
-                'Are you sure you want to delete this blog? This action cannot be undone.', 
-                'warning', 
-                0 // No auto-dismiss
-            );
-            
-            // Add confirmation buttons
-            const toastMessage = confirmToast.querySelector('.toast-message');
-            toastMessage.innerHTML = `
-                <div>Are you sure you want to delete this blog? This action cannot be undone.</div>
-                <div style="margin-top: 10px; display: flex; gap: 10px;">
-                    <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="confirmDeleteBlog(${blogId})">Yes, Delete</button>
-                    <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px;" onclick="dismissToast(this)">Cancel</button>
+        } catch (error) {
+            console.error('Error loading blogs:', error);
+            document.getElementById('blogsTableBody').innerHTML = `
+                <div class="no-blogs">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Error Loading Blogs</h3>
+                    <p>Please try again later.</p>
                 </div>
             `;
         }
+    }
 
-        // Confirm deletion after user confirmation
-        async function confirmDeleteBlog(blogId) {
-            // Remove the confirmation toast
-            const toastContainer = document.getElementById('toastContainer');
-            while (toastContainer.firstChild) {
-                toastContainer.removeChild(toastContainer.firstChild);
-            }
+    function openCreateModal() {
+        currentEditingId = null;
+        document.getElementById('modalTitle').textContent = 'Create New Blog';
+        document.getElementById('blogForm').reset();
+        document.getElementById('blogId').value = '';
+        document.getElementById('status').value = 'published';
+        document.getElementById('is_featured').checked = false;
+        document.getElementById('blogModal').style.display = 'block';
+    }
+
+    async function editBlog(blogId) {
+        try {
+            const response = await fetch(`/get_blog/${blogId}`);
+            const result = await response.json();
             
-            try {
-                const response = await fetch(`/admin/delete_blog/${blogId}`, {
-                    method: 'DELETE'
-                });
-                const result = await response.json();
+            if (result.success) {
+                const blog = result.blog;
                 
-                if (result.success) {
-                    showToast('Blog deleted successfully!', 'success');
-                    loadBlogs();
-                } else {
-                    showToast('Error deleting blog: ' + result.message, 'error');
+                // Convert both to numbers for proper comparison
+                const blogUserId = parseInt(blog.user_id) || 0;
+                const currentUser = parseInt(currentUserId) || 0;
+                
+                // Check if current user is the owner
+                if (blogUserId !== currentUser) {
+                    showToast('error', 'Access Denied', 'You can only edit your own blogs.');
+                    return;
                 }
-            } catch (error) {
-                console.error('Error deleting blog:', error);
-                showToast('Error deleting blog. Please try again.', 'error');
+                
+                currentEditingId = blogId;
+                
+                document.getElementById('modalTitle').textContent = 'Edit Blog';
+                document.getElementById('blogId').value = blogId;
+                document.getElementById('title').value = blog.title;
+                document.getElementById('category').value = blog.category;
+                document.getElementById('category_color').value = blog.category_color || '#abc85f';
+                document.getElementById('author').value = blog.author;
+                document.getElementById('read_time').value = blog.read_time;
+                document.getElementById('image_url').value = blog.image_url || '';
+                document.getElementById('excerpt').value = blog.excerpt || '';
+                document.getElementById('content').value = blog.content;
+                document.getElementById('status').value = blog.status || 'published';
+                document.getElementById('is_featured').checked = blog.is_featured || false;
+                
+                document.getElementById('blogModal').style.display = 'block';
+            } else {
+                showToast('error', 'Error', 'Error loading blog: ' + result.message);
             }
+        } catch (error) {
+            console.error('Error loading blog for edit:', error);
+            showToast('error', 'Error', 'Error loading blog. Please try again.');
         }
+    }
 
-        // Helper function to dismiss toast
-        function dismissToast(button) {
-            const toast = button.closest('.toast');
-            toast.classList.remove('show');
-            toast.classList.add('hide');
-            setTimeout(() => {
-                toast.remove();
-            }, 300);
-        }
-
-        document.getElementById('blogForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+    async function deleteBlog(blogId) {
+        try {
+            // First verify ownership
+            const response = await fetch(`/get_blog/${blogId}`);
+            const result = await response.json();
             
-            const formData = {
-                title: document.getElementById('title').value,
-                content: document.getElementById('content').value,
-                excerpt: document.getElementById('excerpt').value,
-                category: document.getElementById('category').value,
-                category_color: document.getElementById('category_color').value,
-                author: document.getElementById('author').value,
-                read_time: document.getElementById('read_time').value,
-                image_url: document.getElementById('image_url').value,
-                is_featured: document.getElementById('is_featured').checked,
-                status: document.getElementById('status').value
-            };
-
-            try {
-                const url = currentEditingId ? `/admin/update_blog/${currentEditingId}` : '/admin/create_blog';
-                const method = currentEditingId ? 'POST' : 'POST';
+            if (result.success) {
+                const blog = result.blog;
+                // Convert both to numbers for proper comparison
+                const blogUserId = parseInt(blog.user_id) || 0;
+                const currentUser = parseInt(currentUserId) || 0;
                 
-                const response = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData)
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showToast(currentEditingId ? 'Blog updated successfully!' : 'Blog created successfully!', 'success');
-                    closeModal();
-                    loadBlogs();
-                } else {
-                    showToast('Error saving blog: ' + result.message, 'error');
+                if (blogUserId !== currentUser) {
+                    showToast('error', 'Access Denied', 'You can only delete your own blogs.');
+                    return;
                 }
-            } catch (error) {
-                console.error('Error saving blog:', error);
-                showToast('Error saving blog. Please try again.', 'error');
             }
-        });
 
-        function closeModal() {
-            document.getElementById('blogModal').style.display = 'none';
+            const confirmed = await showConfirm('Delete Blog', 'Are you sure you want to delete this blog? This action cannot be undone.');
+            if (!confirmed) return;
+
+            const deleteResponse = await fetch(`/admin/delete_blog/${blogId}`, {
+                method: 'DELETE'
+            });
+            const deleteResult = await deleteResponse.json();
+            
+            if (deleteResult.success) {
+                showToast('success', 'Deleted', 'Blog deleted successfully!');
+                loadBlogs();
+            } else {
+                showToast('error', 'Error', 'Error deleting blog: ' + deleteResult.message);
+            }
+        } catch (error) {
+            console.error('Error deleting blog:', error);
+            showToast('error', 'Error', 'Error deleting blog. Please try again.');
         }
+    }
 
-        // Close modal when clicking outside
-        document.getElementById('blogModal').addEventListener('click', function(e) {
-            if (e.target === this) {
+    document.getElementById('blogForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            title: document.getElementById('title').value,
+            content: document.getElementById('content').value,
+            excerpt: document.getElementById('excerpt').value,
+            category: document.getElementById('category').value,
+            category_color: document.getElementById('category_color').value,
+            author: document.getElementById('author').value,
+            read_time: document.getElementById('read_time').value,
+            image_url: document.getElementById('image_url').value,
+            is_featured: document.getElementById('is_featured').checked,
+            status: document.getElementById('status').value
+        };
+
+        try {
+            const url = currentEditingId ? `/admin/update_blog/${currentEditingId}` : '/admin/create_blog';
+            const method = currentEditingId ? 'POST' : 'POST';
+            
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showToast('success', 'Saved', currentEditingId ? 'Blog updated successfully!' : 'Blog created successfully!');
                 closeModal();
+                loadBlogs();
+            } else {
+                showToast('error', 'Error', 'Error saving blog: ' + result.message);
             }
-        });
-    </script>
+        } catch (error) {
+            console.error('Error saving blog:', error);
+            showToast('error', 'Error', 'Error saving blog. Please try again.');
+        }
+    });
+
+    function closeModal() {
+        document.getElementById('blogModal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('blogModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeModal();
+        }
+    });
+</script>
 </body>
 </html>

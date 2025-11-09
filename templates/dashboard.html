@@ -106,7 +106,7 @@
                     <span id="current-date"></span>
                 </div>
             </div>
-
+            
             <!-- Health Stats Section - NEW SECTION ADDED -->
             <div class="health-stats-section">
                 <div class="health-stats-card">
@@ -189,6 +189,25 @@
                                 </a>
                             </div>
                         {% endif %}
+                    </div>
+                </div>
+            </div>
+                        <!-- Notifications Section -->
+            <div class="notifications-section" style="margin-bottom: 30px;">
+                <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="color: var(--text-dark); font-size: 1.5rem;">
+                        <i class="fas fa-bell" style="margin-right: 10px; color: var(--primary-color);"></i>
+                        Upcoming Notes
+                    </h2>
+                    <button class="btn btn-secondary" onclick="markAllNotificationsRead()" style="padding: 8px 16px; font-size: 0.9rem;">
+                        <i class="fas fa-check-double"></i> Mark All Read
+                    </button>
+                </div>
+                
+                <div class="notifications-container" id="notificationsContainer">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Loading notifications...</p>
                     </div>
                 </div>
             </div>
@@ -351,7 +370,47 @@
             margin-left: auto;
             margin-right: auto;
         }
+                /* Notifications Section Styles */
+        .notifications-section {
+            background: var(--text-light);
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
+        }
 
+        .notification-item:hover .mark-read-btn {
+            background: #f8f9fa;
+            color: #666;
+        }
+
+        .mark-read-btn:hover {
+            background: #e9ecef !important;
+            color: var(--primary-color) !important;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .loading i {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
         /* Affirmation Card Styles */
         .affirmation-card {
             background: linear-gradient(135deg, var(--primary-color) 0%, #8fb351 100%);
@@ -547,6 +606,7 @@
         "Celebrate non-scale victories like better sleep, more energy, and improved mood."
     ];
 
+    
     // Function to get random item from array
     function getRandomItem(array) {
         const randomIndex = Math.floor(Math.random() * array.length);
@@ -604,7 +664,263 @@ function updateInspirationalContent() {
       document.head.appendChild(script);
     })();
   </script>
-   
+   <script>
+// Notification system for dashboard
+let upcomingNotes = {};
+let readNotifications = JSON.parse(localStorage.getItem('readNotifications') || '[]');
+
+// Load notifications when dashboard loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadUpcomingNotes();
+    
+    // Refresh notifications every 2 minutes
+    setInterval(loadUpcomingNotes, 2 * 60 * 1000);
+});
+
+// Load upcoming notes
+async function loadUpcomingNotes() {
+    try {
+        const response = await fetch('/get_upcoming_notes');
+        const result = await response.json();
+        
+        const container = document.getElementById('notificationsContainer');
+        if (!container) return;
+        
+        if (result.success && Object.keys(result.upcoming_notes).length > 0) {
+            upcomingNotes = result.upcoming_notes;
+            displayNotifications(result.upcoming_notes, result.today);
+        } else {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-calendar-check" style="font-size: 3rem; color: #ddd; margin-bottom: 15px;"></i>
+                    <h3>No Upcoming Notes</h3>
+                    <p>You're all caught up! Notes for the next 7 days will appear here.</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading notifications:', error);
+        const container = document.getElementById('notificationsContainer');
+        if (container) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #ddd; margin-bottom: 15px;"></i>
+                    <h3>Error Loading Notifications</h3>
+                    <p>Please try again later.</p>
+                </div>
+            `;
+        }
+    }
+}
+
+// Display notifications
+function displayNotifications(notes, today) {
+    const container = document.getElementById('notificationsContainer');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    // Filter out read notifications and sort by date
+    const unreadNotes = {};
+    Object.keys(notes)
+        .filter(date => !readNotifications.includes(date))
+        .sort()
+        .forEach(date => {
+            unreadNotes[date] = notes[date];
+        });
+    
+    if (Object.keys(unreadNotes).length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-check-circle" style="font-size: 3rem; color: #ddd; margin-bottom: 15px;"></i>
+                <h3>All Caught Up!</h3>
+                <p>No new upcoming notes. You're all set!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    Object.keys(unreadNotes).forEach(date => {
+        const dateNotes = unreadNotes[date];
+        const notificationItem = createNotificationItem(date, dateNotes, today);
+        container.appendChild(notificationItem);
+    });
+}
+
+// Create notification item
+function createNotificationItem(date, notes, today) {
+    const notification = document.createElement('div');
+    notification.className = 'notification-item';
+    notification.style.cssText = `
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-left: 4px solid var(--primary-color);
+        transition: all 0.3s ease;
+    `;
+    
+    const isToday = date === today;
+    const isTomorrow = getRelativeDate(today, 1) === date;
+    
+    let dateLabel = formatDisplayDate(date, today);
+    if (isToday) {
+        dateLabel = `<span style="color: var(--primary-color); font-weight: bold;">Today</span>`;
+        notification.style.borderLeftColor = 'var(--primary-color)';
+    } else if (isTomorrow) {
+        dateLabel = `<span style="color: #e67e22; font-weight: bold;">Tomorrow</span>`;
+        notification.style.borderLeftColor = '#e67e22';
+    } else {
+        notification.style.borderLeftColor = '#3498db';
+    }
+    
+    notification.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+            <div style="flex: 1;">
+                <h4 style="margin: 0 0 5px 0; color: var(--text-dark);">
+                    ${dateLabel}
+                    <small style="color: #666; font-weight: normal;">(${formatDateReadable(date)})</small>
+                </h4>
+                <div style="font-size: 0.9rem; color: #666;">
+                    ${notes.length} note${notes.length > 1 ? 's' : ''}
+                </div>
+            </div>
+            <button class="mark-read-btn" onclick="markNotificationRead('${date}')" 
+                    style="background: none; border: none; color: #999; cursor: pointer; padding: 5px; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="notification-notes">
+            ${notes.map(note => `
+                <div style="background: #f8f9fa; padding: 8px 12px; border-radius: 4px; margin-bottom: 5px; border-left: 2px solid var(--primary-color);">
+                    <div style="font-size: 0.9rem; line-height: 1.4;">${note.content}</div>
+                    ${note.timestamp ? `<small style="color: #888; font-size: 0.8rem;">Added: ${formatTime(note.timestamp)}</small>` : ''}
+                </div>
+            `).join('')}
+        </div>
+    `;
+    
+    notification.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-2px)';
+        this.style.boxShadow = '0 4px 15px rgba(0,0,0,0.15)';
+    });
+    
+    notification.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+        this.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+    });
+    
+    return notification;
+}
+
+// Mark notification as read
+function markNotificationRead(date) {
+    if (!readNotifications.includes(date)) {
+        readNotifications.push(date);
+        localStorage.setItem('readNotifications', JSON.stringify(readNotifications));
+    }
+    
+    // Remove from display
+    delete upcomingNotes[date];
+    loadUpcomingNotes();
+    
+    // Show confirmation toast
+    showNotificationToast(`Notification for ${formatDateReadable(date)} marked as read`, 'success');
+}
+
+// Mark all notifications as read
+function markAllNotificationsRead() {
+    Object.keys(upcomingNotes).forEach(date => {
+        if (!readNotifications.includes(date)) {
+            readNotifications.push(date);
+        }
+    });
+    
+    localStorage.setItem('readNotifications', JSON.stringify(readNotifications));
+    loadUpcomingNotes();
+    
+    showNotificationToast('All notifications marked as read', 'success');
+}
+
+// Show notification toast
+function showNotificationToast(message, type = 'info') {
+    // Create a simple toast notification
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? 'var(--primary-color)' : type === 'error' ? '#dc3545' : '#3498db'};
+        color: white;
+        padding: 12px 20px;
+        border-radius: var(--border-radius);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        transform: translateX(400px);
+        opacity: 0;
+        transition: all 0.3s ease;
+    `;
+    toast.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-${type === 'success' ? 'check' : 'info'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.transform = 'translateX(0)';
+        toast.style.opacity = '1';
+    }, 10);
+    
+    setTimeout(() => {
+        toast.style.transform = 'translateX(400px)';
+        toast.style.opacity = '0';
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }, 3000);
+}
+
+// Helper functions for notifications
+function getRelativeDate(startDate, daysToAdd) {
+    const date = new Date(startDate);
+    date.setDate(date.getDate() + daysToAdd);
+    return date.toISOString().split('T')[0];
+}
+
+function formatDisplayDate(date, today) {
+    const diffDays = Math.floor((new Date(date) - new Date(today)) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Tomorrow';
+    if (diffDays === 2) return 'Day after tomorrow';
+    if (diffDays < 7) return `In ${diffDays} days`;
+    
+    return formatDateReadable(date);
+}
+
+function formatDateReadable(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric' 
+    });
+}
+
+function formatTime(timestamp) {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+</script>
            
        
 </body>

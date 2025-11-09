@@ -144,6 +144,13 @@
                             <canvas id="frequencyChart"></canvas>
                         </div>
                     </div>
+                    <div class="info-card">
+    <h2 class="card-title"><i class="fas fa-utensils"></i> Food Intake Summary</h2>
+    <canvas id="foodChart"></canvas>
+</div>
+
+                 
+
                 </div>
             </div>
         </main>
@@ -290,306 +297,308 @@
     </style>
 
     <script>
-        // Global variables
-        let currentTimeRange = 7;
-        let workoutChart;
-        let frequencyChart;
+    // Global variables
+    let currentTimeRange = 7;
+    let workoutChart;
+    let frequencyChart;
+    let foodChart;
 
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set current date
-            const now = new Date();
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', options);
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set current date
+        const now = new Date();
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', options);
 
-            // Set up filter button event listeners
-            document.querySelectorAll('.btn-filter').forEach(button => {
-                button.addEventListener('click', function() {
-                    // Update active button state
-                    document.querySelectorAll('.btn-filter').forEach(btn => {
-                        btn.classList.remove('active');
-                    });
-                    this.classList.add('active');
-                    
-                    // Update time range and reload data
-                    currentTimeRange = this.dataset.range;
-                    loadProgressData();
+        // Set up filter button event listeners
+        document.querySelectorAll('.btn-filter').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelectorAll('.btn-filter').forEach(btn => {
+                    btn.classList.remove('active');
                 });
+                this.classList.add('active');
+                currentTimeRange = this.dataset.range;
+                loadProgressData(); // 🔥 reload chart data when filters change
             });
-
-            // Load initial progress data
-            loadProgressData();
         });
 
-        async function loadProgressData() {
-            try {
-                // Show loading spinner
-                document.getElementById('loading-spinner').style.display = 'block';
-                document.getElementById('content-area').style.display = 'none';
+        // ✅ Auto-load data when page first opens
+        loadProgressData();
+    });
 
-                // Fetch data from your Flask backend with time range parameter
-                const response = await fetch(`/api/progress/summary?range=${currentTimeRange}`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
+    async function loadProgressData() {
+        try {
+            // Show loading spinner
+            document.getElementById('loading-spinner').style.display = 'block';
+            document.getElementById('content-area').style.display = 'none';
 
-                // Hide loading spinner and show content
-                document.getElementById('loading-spinner').style.display = 'none';
-                document.getElementById('content-area').style.display = 'block';
-
-                createCharts(data.chart_data);
-            } catch (error) {
-                console.error('Error loading progress data:', error);
-                document.getElementById('loading-spinner').innerHTML = 
-                    '<div class="alert alert-danger">Error loading data. Please try again.</div>';
+            // Fetch data from your Flask backend with time range parameter
+            const response = await fetch(`/api/progress/summary?range=${currentTimeRange}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
+            const data = await response.json();
+
+            // Hide loading spinner and show content
+            document.getElementById('loading-spinner').style.display = 'none';
+            document.getElementById('content-area').style.display = 'block';
+
+            createCharts(data.chart_data);
+        } catch (error) {
+            console.error('Error loading progress data:', error);
+            document.getElementById('loading-spinner').innerHTML =
+                '<div class="alert alert-danger">Error loading data. Please try again.</div>';
         }
 
-        function createCharts(data) {
-            createWorkoutChart(data);
-            createFrequencyChart(data);
+        // Load Food Log Data after workout data
+        loadFoodLogData();
+    }
+
+    function createCharts(data) {
+        createWorkoutChart(data);
+        createFrequencyChart(data);
+    }
+
+    // -----------------------------
+    // WORKOUT CHART
+    // -----------------------------
+    function createWorkoutChart(data) {
+        const ctx = document.getElementById('workoutChart').getContext('2d');
+
+        if (workoutChart) {
+            workoutChart.destroy();
         }
 
-        function createWorkoutChart(data) {
-            const ctx = document.getElementById('workoutChart').getContext('2d');
-            
-            if (workoutChart) {
-                workoutChart.destroy();
+        if (!data.workout_data || data.workout_data.length === 0) {
+            document.getElementById('workoutChart').innerHTML =
+                '<div class="text-center p-4"><p>No workout data available. Start logging your workouts to see your progress!</p></div>';
+            return;
+        }
+
+        const dates = data.workout_data.map(item => {
+            const date = new Date(item.workout_date);
+            if (currentTimeRange === '7') {
+                return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+            } else if (currentTimeRange === '30') {
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            } else if (currentTimeRange === '90' || currentTimeRange === '365') {
+                return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+            } else {
+                return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
             }
+        });
 
-            // Check if we have workout data
-            if (!data.workout_data || data.workout_data.length === 0) {
-                document.getElementById('workoutChart').innerHTML = 
-                    '<div class="text-center p-4"><p>No workout data available. Start logging your workouts to see your progress!</p></div>';
-                return;
-            }
+        const durations = data.workout_data.map(item => item.duration_minutes || 0);
+        const calories = data.workout_data.map(item => item.calories_burned || 0);
 
-            console.log('Workout data:', data.workout_data); // Debug log
-
-            // Format dates based on time range
-            const dates = data.workout_data.map(item => {
-                const date = new Date(item.workout_date);
-                
-                if (currentTimeRange === '7') {
-                    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-                } else if (currentTimeRange === '30') {
-                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                } else if (currentTimeRange === '90' || currentTimeRange === '365') {
-                    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-                } else {
-                    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-                }
-            });
-
-            const durations = data.workout_data.map(item => item.duration_minutes || 0);
-            const calories = data.workout_data.map(item => item.calories_burned || 0);
-
-            workoutChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: dates,
-                    datasets: [
-                        {
-                            label: 'Workout Duration (min)',
-                            data: durations,
-                            backgroundColor: 'rgba(171, 200, 95, 0.8)',
-                            borderColor: 'rgba(171, 200, 95, 1)',
-                            borderWidth: 2,
-                            borderRadius: 4,
-                            barPercentage: 0.7,
-                        },
-                        {
-                            label: 'Calories Burned',
-                            data: calories,
-                            backgroundColor: 'rgba(255, 99, 132, 0.6)',
-                            borderColor: 'rgba(255, 99, 132, 1)',
-                            borderWidth: 2,
-                            type: 'line',
-                            yAxisID: 'y1',
-                            tension: 0.4,
-                            pointBackgroundColor: 'rgba(255, 99, 132, 1)',
-                            pointBorderColor: '#fff',
-                            pointBorderWidth: 2,
-                            pointRadius: 4,
-                            pointHoverRadius: 6
-                        }
-                    ]
+        workoutChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: dates,
+                datasets: [
+                    {
+                        label: 'Workout Duration (min)',
+                        data: durations,
+                        backgroundColor: 'rgba(171, 200, 95, 0.8)',
+                        borderColor: 'rgba(171, 200, 95, 1)',
+                        borderWidth: 2,
+                        borderRadius: 4,
+                        barPercentage: 0.7,
+                    },
+                    {
+                        label: 'Calories Burned',
+                        data: calories,
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 2,
+                        type: 'line',
+                        yAxisID: 'y1',
+                        tension: 0.4,
+                        pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { maxRotation: 45, minRotation: 45 }
                     },
-                    scales: {
-                        x: {
-                            grid: {
-                                display: false
-                            },
-                            ticks: {
-                                maxRotation: 45,
-                                minRotation: 45
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Duration (minutes)',
-                                font: {
-                                    weight: 'bold'
-                                }
-                            },
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.1)'
-                            }
-                        },
-                        y1: {
-                            beginAtZero: true,
-                            position: 'right',
-                            title: {
-                                display: true,
-                                text: 'Calories Burned',
-                                font: {
-                                    weight: 'bold'
-                                }
-                            },
-                            grid: {
-                                drawOnChartArea: false
-                            }
-                        }
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Duration (minutes)', font: { weight: 'bold' } },
+                        grid: { color: 'rgba(0, 0, 0, 0.1)' }
                     },
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                            labels: {
-                                usePointStyle: true,
-                                padding: 20
-                            }
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            titleColor: '#fff',
-                            bodyColor: '#fff',
-                            borderColor: 'rgba(255, 255, 255, 0.2)',
-                            borderWidth: 1,
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) {
-                                        label += ': ';
+                    y1: {
+                        beginAtZero: true,
+                        position: 'right',
+                        title: { display: true, text: 'Calories Burned', font: { weight: 'bold' } },
+                        grid: { drawOnChartArea: false }
+                    }
+                },
+                plugins: {
+                    legend: { position: 'top', labels: { usePointStyle: true, padding: 20 } },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) label += ': ';
+                                if (context.parsed.y !== null) {
+                                    if (label.includes('Calories')) {
+                                        label += context.parsed.y.toLocaleString() + ' cal';
+                                    } else {
+                                        label += context.parsed.y + ' min';
                                     }
-                                    if (context.parsed.y !== null) {
-                                        if (label.includes('Calories')) {
-                                            label += context.parsed.y.toLocaleString() + ' cal';
-                                        } else {
-                                            label += context.parsed.y + ' min';
-                                        }
-                                    }
-                                    return label;
                                 }
+                                return label;
                             }
                         }
                     }
                 }
-            });
+            }
+        });
+    }
+
+    // -----------------------------
+    // WORKOUT FREQUENCY CHART
+    // -----------------------------
+    function createFrequencyChart(data) {
+        const ctx = document.getElementById('frequencyChart').getContext('2d');
+
+        if (frequencyChart) frequencyChart.destroy();
+
+        if (!data.frequency_data || data.frequency_data.length === 0) {
+            document.getElementById('frequencyChart').innerHTML =
+                '<div class="text-center p-4"><p>No frequency data available. Workout data will appear here once you have multiple workouts.</p></div>';
+            return;
         }
 
-        function createFrequencyChart(data) {
-            const ctx = document.getElementById('frequencyChart').getContext('2d');
-            
-            if (frequencyChart) {
-                frequencyChart.destroy();
-            }
+        const labels = data.frequency_data.map(item => {
+            if (currentTimeRange === '7') return `Day ${item.period}`;
+            if (currentTimeRange === '30') return `Week ${item.period}`;
+            if (currentTimeRange === '90') return `Month ${item.period}`;
+            return item.period;
+        });
 
-            // Check if we have frequency data
-            if (!data.frequency_data || data.frequency_data.length === 0) {
-                document.getElementById('frequencyChart').innerHTML = 
-                    '<div class="text-center p-4"><p>No frequency data available. Workout data will appear here once you have multiple workouts.</p></div>';
-                return;
-            }
+        const workoutCounts = data.frequency_data.map(item => item.workout_count || 0);
 
-            console.log('Frequency data:', data.frequency_data); // Debug log
-
-            // Format labels based on time range
-            const labels = data.frequency_data.map(item => {
-                if (currentTimeRange === '7') {
-                    return `Day ${item.period}`;
-                } else if (currentTimeRange === '30') {
-                    return `Week ${item.period}`;
-                } else if (currentTimeRange === '90') {
-                    return `Month ${item.period}`;
-                } else {
-                    return item.period;
-                }
-            });
-
-            const workoutCounts = data.frequency_data.map(item => item.workout_count || 0);
-
-            frequencyChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Workouts',
-                            data: workoutCounts,
-                            backgroundColor: 'rgba(54, 162, 235, 0.8)',
-                            borderColor: 'rgba(54, 162, 235, 1)',
-                            borderWidth: 2,
-                            borderRadius: 4,
-                            barPercentage: 0.7,
-                        }
-                    ]
+        frequencyChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Workouts',
+                    data: workoutCounts,
+                    backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 2,
+                    borderRadius: 4,
+                    barPercentage: 0.7,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { grid: { display: false } },
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Number of Workouts', font: { weight: 'bold' } },
+                        grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                        ticks: { stepSize: 1 }
+                    }
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: {
-                            grid: {
-                                display: false
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Number of Workouts',
-                                font: {
-                                    weight: 'bold'
-                                }
-                            },
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.1)'
-                            },
-                            ticks: {
-                                stepSize: 1
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            titleColor: '#fff',
-                            bodyColor: '#fff',
-                            borderColor: 'rgba(255, 255, 255, 0.2)',
-                            borderWidth: 1,
-                            callbacks: {
-                                label: function(context) {
-                                    return `Workouts: ${context.parsed.y}`;
-                                }
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        callbacks: {
+                            label: function(context) {
+                                return `Workouts: ${context.parsed.y}`;
                             }
                         }
                     }
                 }
-            });
+            }
+        });
+    }
+
+    // -----------------------------
+    // 🆕 FOOD LOG CHART
+    // -----------------------------
+    async function loadFoodLogData() {
+        try {
+            const userId = {{ session.get('user_id') | tojson }};
+            if (!userId) return;
+
+            const res = await fetch(`/api/food/progress/${userId}?range=${currentTimeRange}`);
+            const data = await res.json();
+
+            if (!data.success || data.data.length === 0) {
+                console.warn("No food log data found.");
+                return;
+            }
+
+            createFoodChart(data.data);
+        } catch (error) {
+            console.error("Error loading food data:", error);
         }
-    </script>
+    }
+
+    function createFoodChart(foodData) {
+        const ctx = document.getElementById('foodChart').getContext('2d');
+        if (foodChart) foodChart.destroy();
+
+        const labels = foodData.map(entry => {
+    const date = new Date(entry.log_date);
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+});
+
+        const calories = foodData.map(entry => entry.total_calories);
+        const protein = foodData.map(entry => entry.total_protein);
+        const carbs = foodData.map(entry => entry.total_carbs);
+        const fat = foodData.map(entry => entry.total_fat);
+
+        foodChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Calories', data: calories, backgroundColor: '#ABC85F' },
+                    { label: 'Protein (g)', data: protein, backgroundColor: '#6A8CAF' },
+                    { label: 'Carbs (g)', data: carbs, backgroundColor: '#F4A261' },
+                    { label: 'Fat (g)', data: fat, backgroundColor: '#E76F51' }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top' },
+                    title: { display: true, text: `Daily Nutrient Intake (Last ${currentTimeRange} Days)` }
+                },
+                scales: {
+                    x: { stacked: true },
+                    y: { beginAtZero: true, stacked: true }
+                }
+            }
+        });
+    }
+</script>
+
 </body>
 </html>

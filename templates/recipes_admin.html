@@ -647,7 +647,7 @@
                 <i class="fas fa-home"></i>
                 <span>Dashboard</span>
             </a>
-            <a href="#" class="nav-item">
+            <a href="{{ url_for('progress') }}" class="nav-item {% if request.path == '/progress' %}active{% endif %}">
                 <i class="fas fa-chart-line"></i>
                 <span>Progress</span>
             </a>
@@ -667,10 +667,10 @@
                 <i class="fas fa-calendar-alt"></i>
                 <span>Calendar</span>
             </a>
-            <a href="#" class="nav-item" id="snapPlaceholder">
-                <i class="fas fa-camera"></i>
-                <span>Snap</span>
-            </a>
+             <a href="{{ url_for('snap') }}" class="nav-item {% if request.path == url_for('snap') %}active{% endif %}">
+    <i class="fas fa-camera"></i>
+    <span>Snap</span>
+</a>
             <a href="{{ url_for('settings') }}" class="nav-item">
                 <i class="fas fa-cog"></i>
                 <span>Settings</span>
@@ -830,320 +830,353 @@
     </div>
 
     <script>
-        let currentEditingId = null;
+    let currentEditingId = null;
+    // Ensure currentUserId is a number
+    const currentUserId = parseInt("{{ session.get('user_id', 0) }}");
 
-        /***********************
-         * Toast utilities
-         ***********************/
-        const toastContainer = document.getElementById('toastContainer');
+    /***********************
+     * Toast utilities
+     ***********************/
+    const toastContainer = document.getElementById('toastContainer');
 
-        function showToast(type = 'info', title = '', message = '', duration = 4000) {
-            const toast = document.createElement('div');
-            toast.className = `toast toast-${type}`;
-            toast.setAttribute('role', 'status');
+    function showToast(type = 'info', title = '', message = '', duration = 4000) {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.setAttribute('role', 'status');
 
-            const body = document.createElement('div');
-            body.className = 'toast-body';
+        const body = document.createElement('div');
+        body.className = 'toast-body';
 
-            if (title) {
-                const t = document.createElement('div');
-                t.className = 'toast-title';
-                t.textContent = title;
-                body.appendChild(t);
-            }
-
-            if (message) {
-                const m = document.createElement('div');
-                m.className = 'toast-message';
-                m.textContent = message;
-                body.appendChild(m);
-            }
-
-            const closeBtn = document.createElement('button');
-            closeBtn.className = 'toast-close';
-            closeBtn.innerHTML = '&times;';
-            closeBtn.onclick = () => {
-                toastContainer.removeChild(toast);
-            };
-
-            toast.appendChild(body);
-            toast.appendChild(closeBtn);
-
-            // apply color class mapping
-            if (type === 'success') toast.classList.add('toast-success');
-            else if (type === 'error') toast.classList.add('toast-error');
-            else toast.classList.add('toast-info');
-
-            toastContainer.appendChild(toast);
-
-            if (duration > 0) {
-                setTimeout(() => {
-                    if (toast.parentElement) toastContainer.removeChild(toast);
-                }, duration);
-            }
+        if (title) {
+            const t = document.createElement('div');
+            t.className = 'toast-title';
+            t.textContent = title;
+            body.appendChild(t);
         }
 
-        /***********************
-         * Confirm modal utils
-         ***********************/
-        const confirmModal = document.getElementById('confirmModal');
-        const confirmTitleEl = document.getElementById('confirmTitle');
-        const confirmMessageEl = document.getElementById('confirmMessage');
-        const confirmCancelBtn = document.getElementById('confirmCancel');
-        const confirmOkBtn = document.getElementById('confirmOk');
-
-        function showConfirm(title = 'Confirm', message = 'Are you sure?') {
-            return new Promise((resolve) => {
-                confirmTitleEl.textContent = title;
-                confirmMessageEl.textContent = message;
-                confirmModal.style.display = 'flex';
-
-                function cleanup(result) {
-                    confirmModal.style.display = 'none';
-                    confirmCancelBtn.removeEventListener('click', onCancel);
-                    confirmOkBtn.removeEventListener('click', onOk);
-                    resolve(result);
-                }
-
-                function onCancel() { cleanup(false); }
-                function onOk() { cleanup(true); }
-
-                confirmCancelBtn.addEventListener('click', onCancel);
-                confirmOkBtn.addEventListener('click', onOk);
-            });
+        if (message) {
+            const m = document.createElement('div');
+            m.className = 'toast-message';
+            m.textContent = message;
+            body.appendChild(m);
         }
 
-        // Close confirm on Escape
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && confirmModal.style.display === 'flex') {
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'toast-close';
+        closeBtn.innerHTML = '&times;';
+        closeBtn.onclick = () => {
+            toastContainer.removeChild(toast);
+        };
+
+        toast.appendChild(body);
+        toast.appendChild(closeBtn);
+
+        // apply color class mapping
+        if (type === 'success') toast.classList.add('toast-success');
+        else if (type === 'error') toast.classList.add('toast-error');
+        else toast.classList.add('toast-info');
+
+        toastContainer.appendChild(toast);
+
+        if (duration > 0) {
+            setTimeout(() => {
+                if (toast.parentElement) toastContainer.removeChild(toast);
+            }, duration);
+        }
+    }
+
+    /***********************
+     * Confirm modal utils
+     ***********************/
+    const confirmModal = document.getElementById('confirmModal');
+    const confirmTitleEl = document.getElementById('confirmTitle');
+    const confirmMessageEl = document.getElementById('confirmMessage');
+    const confirmCancelBtn = document.getElementById('confirmCancel');
+    const confirmOkBtn = document.getElementById('confirmOk');
+
+    function showConfirm(title = 'Confirm', message = 'Are you sure?') {
+        return new Promise((resolve) => {
+            confirmTitleEl.textContent = title;
+            confirmMessageEl.textContent = message;
+            confirmModal.style.display = 'flex';
+
+            function cleanup(result) {
                 confirmModal.style.display = 'none';
+                confirmCancelBtn.removeEventListener('click', onCancel);
+                confirmOkBtn.removeEventListener('click', onOk);
+                resolve(result);
+            }
+
+            function onCancel() { cleanup(false); }
+            function onOk() { cleanup(true); }
+
+            confirmCancelBtn.addEventListener('click', onCancel);
+            confirmOkBtn.addEventListener('click', onOk);
+        });
+    }
+
+    // Close confirm on Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && confirmModal.style.display === 'flex') {
+            confirmModal.style.display = 'none';
+        }
+    });
+
+    /***********************
+     * Main admin code with ownership checking
+     ***********************/
+    document.addEventListener('DOMContentLoaded', function() {
+        // DOM Elements
+        const recipesList = document.getElementById('recipesList');
+        const recipeModal = document.getElementById('recipeModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const recipeForm = document.getElementById('recipeForm');
+        const createRecipeBtn = document.getElementById('createRecipeBtn');
+        const modalClose = document.getElementById('modalClose');
+        const cancelBtn = document.getElementById('cancelBtn');
+
+        // Load recipes on page load
+        loadRecipes();
+
+        // Create recipe button
+        createRecipeBtn.addEventListener('click', function() {
+            openRecipeModal();
+        });
+
+        // Close modal buttons
+        modalClose.addEventListener('click', closeModal);
+        cancelBtn.addEventListener('click', closeModal);
+
+        // Close modal when clicking outside
+        recipeModal.addEventListener('click', function(e) {
+            if (e.target === recipeModal) {
+                closeModal();
             }
         });
 
-        /***********************
-         * Main admin code (unchanged logic, only alerts replaced)
-         ***********************/
-        document.addEventListener('DOMContentLoaded', function() {
-            // DOM Elements
-            const recipesList = document.getElementById('recipesList');
-            const recipeModal = document.getElementById('recipeModal');
-            const modalTitle = document.getElementById('modalTitle');
-            const recipeForm = document.getElementById('recipeForm');
-            const createRecipeBtn = document.getElementById('createRecipeBtn');
-            const modalClose = document.getElementById('modalClose');
-            const cancelBtn = document.getElementById('cancelBtn');
+        // Form submission
+        recipeForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveRecipe();
+        });
 
-            // Load recipes on page load
-            loadRecipes();
-
-            // Create recipe button
-            createRecipeBtn.addEventListener('click', function() {
-                openRecipeModal();
-            });
-
-            // Close modal buttons
-            modalClose.addEventListener('click', closeModal);
-            cancelBtn.addEventListener('click', closeModal);
-
-            // Close modal when clicking outside
-            recipeModal.addEventListener('click', function(e) {
-                if (e.target === recipeModal) {
-                    closeModal();
-                }
-            });
-
-            // Form submission
-            recipeForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                saveRecipe();
-            });
-
-            // Load recipes function
-            async function loadRecipes() {
-                try {
-                    recipesList.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading recipes...</p></div>';
-                    
-                    const response = await fetch('/admin/get_recipes');
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        displayRecipes(result.recipes);
-                    } else {
-                        recipesList.innerHTML = '<div class="no-recipes"><i class="fas fa-utensils"></i><h3>No Recipes Found</h3><p>Create your first recipe to get started!</p></div>';
-                    }
-                } catch (error) {
-                    console.error('Error loading recipes:', error);
-                    recipesList.innerHTML = '<div class="no-recipes"><i class="fas fa-exclamation-triangle"></i><h3>Error Loading Recipes</h3><p>Please try again later.</p></div>';
-                    showToast('error','Error','Unable to load recipes. Please try again.', 5000);
-                }
-            }
-
-            // Display recipes in table
-            function displayRecipes(recipes) {
-                if (recipes.length === 0) {
-                    recipesList.innerHTML = '<div class="no-recipes"><i class="fas fa-utensils"></i><h3>No Recipes Available</h3><p>Create your first recipe to get started!</p></div>';
-                    return;
-                }
-
-                recipesList.innerHTML = '';
+        // Load recipes function
+        async function loadRecipes() {
+            try {
+                recipesList.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading recipes...</p></div>';
                 
-                recipes.forEach(recipe => {
-                    const row = document.createElement('div');
-                    row.className = 'table-row';
-                    row.innerHTML = `
-                        <div class="recipe-title">
-                            <div class="recipe-image" style="background-image: url('${recipe.image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}')"></div>
-                            ${recipe.title}
-                        </div>
-                        <div><span class="category-badge">${recipe.category}</span></div>
-                        <div>${recipe.total_time}</div>
-                        <div>${recipe.calories}</div>
-                        <div>${recipe.is_featured ? '<span class="featured-badge">Featured</span>' : '-'}</div>
-                        <div class="action-buttons">
-                            <button class="btn-edit" onclick="editRecipe(${recipe.id})">
-                                <i class="fas fa-edit"></i> Edit
-                            </button>
-                            <button class="btn-delete" onclick="deleteRecipe(${recipe.id})">
-                                <i class="fas fa-trash"></i> Delete
-                            </button>
-                        </div>
-                    `;
-                    recipesList.appendChild(row);
-                });
-            }
-
-            // Open recipe modal
-            function openRecipeModal(recipe = null) {
-                currentEditingId = recipe ? recipe.id : null;
-                modalTitle.textContent = recipe ? 'Edit Recipe' : 'Create New Recipe';
+                const response = await fetch('/admin/get_recipes');
+                const result = await response.json();
                 
-                if (recipe) {
-                    // Fill form with existing data
-                    document.getElementById('recipeId').value = recipe.id;
-                    document.getElementById('recipeTitle').value = recipe.title;
-                    document.getElementById('recipeCategory').value = recipe.category;
-                    document.getElementById('recipePrepTime').value = recipe.prep_time || '';
-                    document.getElementById('recipeCookTime').value = recipe.cook_time || '';
-                    document.getElementById('recipeTotalTime').value = recipe.total_time;
-                    document.getElementById('recipeDifficulty').value = recipe.difficulty || '';
-                    document.getElementById('recipeCalories').value = recipe.calories;
-                    document.getElementById('recipeServings').value = recipe.servings;
-                    document.getElementById('recipeTags').value = recipe.tags || '';
-                    document.getElementById('recipeImage').value = recipe.image_url || '';
-                    document.getElementById('recipeIngredients').value = recipe.ingredients;
-                    document.getElementById('recipeInstructions').value = recipe.instructions;
-                    document.getElementById('recipeFeatured').checked = recipe.is_featured || false;
+                if (result.success) {
+                    displayRecipes(result.recipes);
                 } else {
-                    // Clear form for new recipe
-                    recipeForm.reset();
+                    recipesList.innerHTML = '<div class="no-recipes"><i class="fas fa-utensils"></i><h3>No Recipes Found</h3><p>Create your first recipe to get started!</p></div>';
                 }
+            } catch (error) {
+                console.error('Error loading recipes:', error);
+                recipesList.innerHTML = '<div class="no-recipes"><i class="fas fa-exclamation-triangle"></i><h3>Error Loading Recipes</h3><p>Please try again later.</p></div>';
+                showToast('error','Error','Unable to load recipes. Please try again.', 5000);
+            }
+        }
+
+        // Display recipes in table
+        function displayRecipes(recipes) {
+            if (recipes.length === 0) {
+                recipesList.innerHTML = '<div class="no-recipes"><i class="fas fa-utensils"></i><h3>No Recipes Available</h3><p>Create your first recipe to get started!</p></div>';
+                return;
+            }
+
+            recipesList.innerHTML = '';
+            
+            recipes.forEach(recipe => {
+                // Convert both to numbers for proper comparison
+                const recipeUserId = parseInt(recipe.user_id) || 0;
+                const currentUser = parseInt(currentUserId) || 0;
+                const isOwner = recipeUserId === currentUser;
                 
-                recipeModal.style.display = 'block';
+                const actionButtons = isOwner ? 
+                    `<div class="action-buttons">
+                        <button class="btn-edit" onclick="editRecipe(${recipe.id})">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn-delete" onclick="deleteRecipe(${recipe.id})">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>` :
+                    `<div style="color: #6c757d; font-style: italic; font-size: 12px;">View Only</div>`;
+
+                const row = document.createElement('div');
+                row.className = 'table-row';
+                row.innerHTML = `
+                    <div class="recipe-title">
+                        <div class="recipe-image" style="background-image: url('${recipe.image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}')"></div>
+                        ${recipe.title}
+                    </div>
+                    <div><span class="category-badge">${recipe.category}</span></div>
+                    <div>${recipe.total_time}</div>
+                    <div>${recipe.calories}</div>
+                    <div>${recipe.is_featured ? '<span class="featured-badge">Featured</span>' : '-'}</div>
+                    ${actionButtons}
+                `;
+                recipesList.appendChild(row);
+            });
+        }
+
+        // Open recipe modal
+        function openRecipeModal(recipe = null) {
+            currentEditingId = recipe ? recipe.id : null;
+            modalTitle.textContent = recipe ? 'Edit Recipe' : 'Create New Recipe';
+            
+            if (recipe) {
+                // Fill form with existing data
+                document.getElementById('recipeId').value = recipe.id;
+                document.getElementById('recipeTitle').value = recipe.title;
+                document.getElementById('recipeCategory').value = recipe.category;
+                document.getElementById('recipePrepTime').value = recipe.prep_time || '';
+                document.getElementById('recipeCookTime').value = recipe.cook_time || '';
+                document.getElementById('recipeTotalTime').value = recipe.total_time;
+                document.getElementById('recipeDifficulty').value = recipe.difficulty || '';
+                document.getElementById('recipeCalories').value = recipe.calories;
+                document.getElementById('recipeServings').value = recipe.servings;
+                document.getElementById('recipeTags').value = recipe.tags || '';
+                document.getElementById('recipeImage').value = recipe.image_url || '';
+                document.getElementById('recipeIngredients').value = recipe.ingredients;
+                document.getElementById('recipeInstructions').value = recipe.instructions;
+                document.getElementById('recipeFeatured').checked = recipe.is_featured || false;
+            } else {
+                // Clear form for new recipe
+                recipeForm.reset();
             }
+            
+            recipeModal.style.display = 'block';
+        }
 
-            // Close modal
-            function closeModal() {
-                recipeModal.style.display = 'none';
-                currentEditingId = null;
-            }
+        // Close modal
+        function closeModal() {
+            recipeModal.style.display = 'none';
+            currentEditingId = null;
+        }
 
-            // Save recipe
-            async function saveRecipe() {
-                const formData = {
-                    title: document.getElementById('recipeTitle').value,
-                    category: document.getElementById('recipeCategory').value,
-                    prep_time: document.getElementById('recipePrepTime').value,
-                    cook_time: document.getElementById('recipeCookTime').value,
-                    total_time: document.getElementById('recipeTotalTime').value,
-                    difficulty: document.getElementById('recipeDifficulty').value,
-                    calories: document.getElementById('recipeCalories').value,
-                    servings: document.getElementById('recipeServings').value,
-                    tags: document.getElementById('recipeTags').value,
-                    image_url: document.getElementById('recipeImage').value,
-                    ingredients: document.getElementById('recipeIngredients').value,
-                    instructions: document.getElementById('recipeInstructions').value,
-                    is_featured: document.getElementById('recipeFeatured').checked
-                };
-
-                try {
-                    const url = currentEditingId ? `/admin/update_recipe/${currentEditingId}` : '/admin/create_recipe';
-                    const method = currentEditingId ? 'POST' : 'POST';
-                    
-                    const response = await fetch(url, {
-                        method: method,
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(formData)
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        showToast('success', 'Saved', result.message || 'Recipe saved', 4000);
-                        closeModal();
-                        loadRecipes();
-                    } else {
-                        showToast('error', 'Error', result.message || 'Failed to save recipe', 5000);
-                    }
-                } catch (error) {
-                    console.error('Error saving recipe:', error);
-                    showToast('error','Error','Error saving recipe. Please try again.', 5000);
-                }
-            }
-
-            // Global functions for buttons
-            window.editRecipe = function(recipeId) {
-                // Find recipe data and open modal
-                fetch('/admin/get_recipes')
-                    .then(response => response.json())
-                    .then(result => {
-                        if (result.success) {
-                            const recipe = result.recipes.find(r => r.id === recipeId);
-                            if (recipe) {
-                                openRecipeModal(recipe);
-                            } else {
-                                showToast('error','Not found','Recipe data not found',4000);
-                            }
-                        } else {
-                            showToast('error','Error',result.message || 'Unable to fetch recipes', 5000);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error fetching recipe:', error);
-                        showToast('error','Error','Error loading recipe data.', 5000);
-                    });
+        // Save recipe
+        async function saveRecipe() {
+            const formData = {
+                title: document.getElementById('recipeTitle').value,
+                category: document.getElementById('recipeCategory').value,
+                prep_time: document.getElementById('recipePrepTime').value,
+                cook_time: document.getElementById('recipeCookTime').value,
+                total_time: document.getElementById('recipeTotalTime').value,
+                difficulty: document.getElementById('recipeDifficulty').value,
+                calories: document.getElementById('recipeCalories').value,
+                servings: document.getElementById('recipeServings').value,
+                tags: document.getElementById('recipeTags').value,
+                image_url: document.getElementById('recipeImage').value,
+                ingredients: document.getElementById('recipeIngredients').value,
+                instructions: document.getElementById('recipeInstructions').value,
+                is_featured: document.getElementById('recipeFeatured').checked
             };
 
-            window.deleteRecipe = async function(recipeId) {
+            try {
+                const url = currentEditingId ? `/admin/update_recipe/${currentEditingId}` : '/admin/create_recipe';
+                const method = currentEditingId ? 'POST' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast('success', 'Saved', result.message || 'Recipe saved', 4000);
+                    closeModal();
+                    loadRecipes();
+                } else {
+                    showToast('error', 'Error', result.message || 'Failed to save recipe', 5000);
+                }
+            } catch (error) {
+                console.error('Error saving recipe:', error);
+                showToast('error','Error','Error saving recipe. Please try again.', 5000);
+            }
+        }
+
+        // Global functions for buttons
+        window.editRecipe = async function(recipeId) {
+            try {
+                const response = await fetch(`/get_recipe/${recipeId}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const recipe = result.recipe;
+                    
+                    // Convert both to numbers for proper comparison
+                    const recipeUserId = parseInt(recipe.user_id) || 0;
+                    const currentUser = parseInt(currentUserId) || 0;
+                    
+                    // Check if current user is the owner
+                    if (recipeUserId !== currentUser) {
+                        showToast('error', 'Access Denied', 'You can only edit your own recipes.');
+                        return;
+                    }
+                    
+                    openRecipeModal(recipe);
+                } else {
+                    showToast('error','Error',result.message || 'Unable to fetch recipe', 5000);
+                }
+            } catch (error) {
+                console.error('Error fetching recipe:', error);
+                showToast('error','Error','Error loading recipe data.', 5000);
+            }
+        };
+
+        window.deleteRecipe = async function(recipeId) {
+            try {
+                // First verify ownership
+                const response = await fetch(`/get_recipe/${recipeId}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const recipe = result.recipe;
+                    // Convert both to numbers for proper comparison
+                    const recipeUserId = parseInt(recipe.user_id) || 0;
+                    const currentUser = parseInt(currentUserId) || 0;
+                    
+                    if (recipeUserId !== currentUser) {
+                        showToast('error', 'Access Denied', 'You can only delete your own recipes.');
+                        return;
+                    }
+                }
+
                 const confirmed = await showConfirm('Delete Recipe', 'Are you sure you want to delete this recipe? This action cannot be undone.');
                 if (!confirmed) return;
 
-                fetch(`/admin/delete_recipe/${recipeId}`, {
+                const deleteResponse = await fetch(`/admin/delete_recipe/${recipeId}`, {
                     method: 'DELETE'
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.success) {
-                        showToast('success','Deleted', result.message || 'Recipe deleted', 4000);
-                        loadRecipes();
-                    } else {
-                        showToast('error','Error', result.message || 'Failed to delete recipe', 5000);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error deleting recipe:', error);
-                    showToast('error','Error','Error deleting recipe. Please try again.', 5000);
                 });
-            };
+                const deleteResult = await deleteResponse.json();
+                
+                if (deleteResult.success) {
+                    showToast('success','Deleted', deleteResult.message || 'Recipe deleted', 4000);
+                    loadRecipes();
+                } else {
+                    showToast('error','Error', deleteResult.message || 'Failed to delete recipe', 5000);
+                }
+            } catch (error) {
+                console.error('Error deleting recipe:', error);
+                showToast('error','Error','Error deleting recipe. Please try again.', 5000);
+            }
+        };
 
-            // provide graceful placeholder behaviour for snap nav-item
-            document.getElementById('snapPlaceholder')?.addEventListener('click', function(e){
-                e.preventDefault();
-                showToast('info','Coming soon','Snap feature coming soon!', 3000);
-            });
-
+        // provide graceful placeholder behaviour for snap nav-item
+        document.getElementById('snapPlaceholder')?.addEventListener('click', function(e){
+            e.preventDefault();
+            showToast('info','Coming soon','Snap feature coming soon!', 3000);
         });
-    </script>
+
+    });
+</script>
 </body>
 </html>

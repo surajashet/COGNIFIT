@@ -651,92 +651,73 @@ def progress():
     
     return render_template('progress.html', 
                          user_name=session.get('username'))
+from flask import request, jsonify
+import mysql.connector
 
-@app.route('/api/progress/summary')
-def progress_summary():
-    """API endpoint for progress data - WORKOUT DATA ONLY"""
-    if 'user_id' not in session:
-        return jsonify({'error': 'Not authenticated'}), 401
-    
-    user_id = session['user_id']
-    time_range = request.args.get('range', '7')  # Default to 7 days
-    
+
+@app.route('/api/food/progress/<int:user_id>')
+def food_progress(user_id):
+    conn = None
     try:
-        conn = mysql.connector.connect(**db_cognifit)
-        cur = conn.cursor(dictionary=True)
-        
-        # Calculate date range based on filter
-        if time_range == '7':
-            date_filter = "AND workout_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)"
-        elif time_range == '30':
-            date_filter = "AND workout_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)"
-        elif time_range == '90':
-            date_filter = "AND workout_date >= DATE_SUB(CURDATE(), INTERVAL 90 DAY)"
-        elif time_range == '365':
-            date_filter = "AND workout_date >= DATE_SUB(CURDATE(), INTERVAL 365 DAY)"
-        else:  # 'all'
-            date_filter = ""
-        
-        # Get detailed workout data for the progress page
-        cur.execute(f"""
-            SELECT 
-                workout_date,
-                calories_burned,
-                duration_minutes,
-                workout_type,
-                intensity_level
-            FROM workouts 
-            WHERE user_id = %s {date_filter}
-            ORDER BY workout_date ASC
-        """, (user_id,))
-        
-        workout_data = cur.fetchall()
-        
-        # Convert date strings to date objects
-        for workout in workout_data:
-            if isinstance(workout['workout_date'], str):
-                workout['workout_date'] = datetime.strptime(workout['workout_date'], '%Y-%m-%d').date()
-            elif isinstance(workout['workout_date'], datetime):
-                workout['workout_date'] = workout['workout_date'].date()
-        
-        cur.close()
-        conn.close()
+        range_param = request.args.get('range', '7')  # can be 7, 30, 365, or 'all'
 
-        # Calculate metrics
-        metrics = calculate_progress_metrics(workout_data, time_range)
-        
-        # Get frequency data for charts
-        frequency_data = get_workout_frequency_data(workout_data, time_range)
-        
-        # Format data for charts
-        chart_data = {
-            'workout_data': workout_data,
-            'frequency_data': frequency_data
-        }
-        
-        return jsonify({
-            'chart_data': chart_data,
-            'metrics': metrics
-        })
-        
+        # Determine the range filter
+        if range_param == 'all':
+            range_days = None
+        else:
+            try:
+                range_days = int(range_param)
+            except ValueError:
+                range_days = 7  # fallback just in case
+
+        conn = mysql.connector.connect(
+            host='localhost',
+            user='root',
+            password='',
+            database='cognifit'
+        )
+        cursor = conn.cursor(dictionary=True)
+
+        if range_days:  # For specific range (7, 30, 365, etc.)
+            start_date = datetime.now() - timedelta(days=range_days)
+            query = """
+                SELECT DATE(log_date) AS log_date,
+                       SUM(calories) AS total_calories,
+                       SUM(protein) AS total_protein,
+                       SUM(carbs) AS total_carbs,
+                       SUM(fat) AS total_fat
+                FROM food_log
+                WHERE user_id = %s AND log_date >= %s
+                GROUP BY DATE(log_date)
+                ORDER BY DATE(log_date)
+            """
+            cursor.execute(query, (user_id, start_date))
+        else:  # For all time data
+            query = """
+                SELECT DATE(log_date) AS log_date,
+                       SUM(calories) AS total_calories,
+                       SUM(protein) AS total_protein,
+                       SUM(carbs) AS total_carbs,
+                       SUM(fat) AS total_fat
+                FROM food_log
+                WHERE user_id = %s
+                GROUP BY DATE(log_date)
+                ORDER BY DATE(log_date)
+            """
+            cursor.execute(query, (user_id,))
+
+        data = cursor.fetchall()
+        return jsonify({"success": True, "data": data})
+
     except Exception as e:
-        print(f"Error fetching progress data: {e}")
-        # Return empty workout data
-        return jsonify({
-            'chart_data': {
-                'workout_data': [],
-                'frequency_data': []
-            },
-            'metrics': {
-                'total_workouts': 0,
-                'total_calories': 0,
-                'total_minutes': 0,
-                'avg_calories_per_workout': 0,
-                'avg_duration_per_workout': 0,
-                'consistency': 0,
-                'period_label': 'week'
-            }
-        })
+        print("Error in /api/food/progress:", e)
+        return jsonify({"success": False, "message": str(e)})
+
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
 
 # -------------------------
 # NEW API ROUTE FOR CYCLE PREDICTION
@@ -832,62 +813,70 @@ def api_predict_cycle():
 # Recipe Routes
 # -------------------------
 
+# -------------------------
+# Recipe Routes
+# -------------------------
+ 
+# -------------------------
+# Recipe Routes
+# -------------------------
+ 
 @app.route('/recipes')
 def recipes():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+   
     try:
         conn = mysql.connector.connect(**db_cognifit)
         cur = conn.cursor(dictionary=True)
-        
+       
         # Get featured recipe
         cur.execute("""
-            SELECT * FROM recipes 
-            WHERE is_featured = TRUE 
-            ORDER BY created_at DESC 
+            SELECT * FROM recipes
+            WHERE is_featured = TRUE
+            ORDER BY created_at DESC
             LIMIT 1
         """)
         featured_recipe = cur.fetchone()
-        
+       
         # Get other recipes
         cur.execute("""
-            SELECT * FROM recipes 
-            WHERE (is_featured = FALSE OR is_featured IS NULL) 
-            ORDER BY created_at DESC 
+            SELECT * FROM recipes
+            WHERE (is_featured = FALSE OR is_featured IS NULL)
+            ORDER BY created_at DESC
             LIMIT 15
         """)
         recipes = cur.fetchall()
-        
+       
         cur.close()
         conn.close()
-        
-        return render_template('recipes.html', 
+       
+        return render_template('recipes.html',
                              user_name=session.get('username'),
                              featured_recipe=featured_recipe,
                              recipes=recipes)
-        
+       
     except Exception as e:
         print(f"Error loading recipes: {e}")
         # Fallback to empty data
-        return render_template('recipes.html', 
+        return render_template('recipes.html',
                              user_name=session.get('username'),
                              featured_recipe=None,
                              recipes=[])
-
+ 
 @app.route('/get_recipe/<int:recipe_id>')
 def get_recipe(recipe_id):
     """Get single recipe for modal"""
     try:
         conn = mysql.connector.connect(**db_cognifit)
         cur = conn.cursor(dictionary=True)
-        
+       
         cur.execute("SELECT * FROM recipes WHERE id = %s", (recipe_id,))
         recipe = cur.fetchone()
-        
+       
         cur.close()
         conn.close()
-        
+       
         if recipe:
             return jsonify({
                 "success": True,
@@ -906,33 +895,34 @@ def get_recipe(recipe_id):
                     "ingredients": recipe['ingredients'],
                     "instructions": recipe['instructions'],
                     "is_featured": recipe['is_featured'],
+                    "user_id": recipe['user_id'],  # ADD THIS LINE
                     "created_at": recipe['created_at'].strftime('%b %d, %Y') if recipe['created_at'] else ''
                 }
             })
         else:
             return jsonify({"success": False, "message": "Recipe not found"}), 404
-            
+           
     except Exception as e:
         print(f"Error fetching recipe: {e}")
         return jsonify({"success": False, "message": "Error fetching recipe"}), 500
-
+ 
 @app.route('/admin/recipes')
 def admin_recipes():
     """Admin panel for managing recipes"""
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+   
     return render_template('recipes_admin.html', user_name=session.get('username'))
-
+ 
 @app.route('/admin/create_recipe', methods=['POST'])
 def create_recipe():
     """Create a new recipe"""
     if 'user_id' not in session:
         return jsonify({"success": False, "message": "Not logged in"}), 401
-    
+   
     try:
         data = request.get_json()
-        
+       
         title = data.get('title')
         category = data.get('category')
         prep_time = data.get('prep_time')
@@ -946,85 +936,103 @@ def create_recipe():
         ingredients = data.get('ingredients')
         instructions = data.get('instructions')
         is_featured = data.get('is_featured', False)
-        
+        user_id = session['user_id']  # ADD THIS LINE
+       
         # Validate required fields
         if not all([title, category, total_time, calories, servings, ingredients, instructions]):
             return jsonify({"success": False, "message": "Missing required fields"}), 400
-        
+       
         conn = mysql.connector.connect(**db_cognifit)
         cur = conn.cursor()
-        
+       
         # If setting as featured, unfeature other recipes
         if is_featured:
             cur.execute("UPDATE recipes SET is_featured = FALSE WHERE is_featured = TRUE")
-        
-        # Insert new recipe
+       
+        # Insert new recipe WITH user_id
         cur.execute("""
-            INSERT INTO recipes (title, category, prep_time, cook_time, total_time, difficulty, calories, servings, tags, image_url, ingredients, instructions, is_featured)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, (title, category, prep_time, cook_time, total_time, difficulty, calories, servings, tags, image_url, ingredients, instructions, is_featured))
-        
+            INSERT INTO recipes (title, category, prep_time, cook_time, total_time, difficulty, calories, servings, tags, image_url, ingredients, instructions, is_featured, user_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (title, category, prep_time, cook_time, total_time, difficulty, calories, servings, tags, image_url, ingredients, instructions, is_featured, user_id))
+       
         conn.commit()
         recipe_id = cur.lastrowid
-        
+       
         cur.close()
         conn.close()
-        
+       
         return jsonify({
-            "success": True, 
+            "success": True,
             "message": "Recipe created successfully!",
             "recipe_id": recipe_id
         })
-        
+       
     except Exception as e:
         print(f"Error creating recipe: {e}")
         return jsonify({"success": False, "message": "Error creating recipe"}), 500
-
+   
 @app.route('/admin/get_recipes')
 def admin_get_recipes():
     """Get all recipes for admin panel"""
     if 'user_id' not in session:
         return jsonify({"success": False, "message": "Not logged in"}), 401
-    
+   
     try:
         conn = mysql.connector.connect(**db_cognifit)
         cur = conn.cursor(dictionary=True)
-        
-        cur.execute("SELECT * FROM recipes ORDER BY created_at DESC")
+       
+        # Make sure this query includes user_id
+        cur.execute("SELECT *, COALESCE(user_id, 0) as user_id FROM recipes ORDER BY created_at DESC")
         recipes = cur.fetchall()
-        
+       
         cur.close()
         conn.close()
-        
+       
         # Convert datetime objects to strings
         for recipe in recipes:
             if recipe['created_at']:
                 recipe['created_at'] = recipe['created_at'].strftime('%Y-%m-%d %H:%M:%S')
             if recipe['updated_at']:
                 recipe['updated_at'] = recipe['updated_at'].strftime('%Y-%m-%d %H:%M:%S')
-        
+       
         return jsonify({"success": True, "recipes": recipes})
-        
+       
     except Exception as e:
         print(f"Error fetching recipes: {e}")
         return jsonify({"success": False, "message": "Error fetching recipes"}), 500
-
+   
 @app.route('/admin/update_recipe/<int:recipe_id>', methods=['POST'])
 def update_recipe(recipe_id):
     """Update a recipe"""
     if 'user_id' not in session:
         return jsonify({"success": False, "message": "Not logged in"}), 401
-    
+   
     try:
         data = request.get_json()
-        
+        user_id = session['user_id']  # ADD THIS LINE
+       
         conn = mysql.connector.connect(**db_cognifit)
-        cur = conn.cursor()
-        
+        cur = conn.cursor(dictionary=True)  # Change to dictionary=True
+       
+        # First, check if the current user owns this recipe
+        cur.execute("SELECT user_id FROM recipes WHERE id = %s", (recipe_id,))
+        recipe = cur.fetchone()
+       
+        if not recipe:
+            return jsonify({"success": False, "message": "Recipe not found"}), 404
+       
+        # Convert both to integers for proper comparison
+        recipe_user_id = int(recipe['user_id']) if recipe['user_id'] is not None else 0
+        session_user_id = int(user_id)
+       
+        # Check ownership - only allow if user owns the recipe
+        if recipe_user_id != session_user_id:
+            return jsonify({"success": False, "message": "You can only edit your own recipes"}), 403
+       
         # Build dynamic update query
         update_fields = []
         update_values = []
-        
+       
         if 'title' in data:
             update_fields.append("title = %s")
             update_values.append(data['title'])
@@ -1067,40 +1075,56 @@ def update_recipe(recipe_id):
             # If setting as featured, unfeature other recipes
             if data['is_featured']:
                 cur.execute("UPDATE recipes SET is_featured = FALSE WHERE id != %s", (recipe_id,))
-        
+       
         if update_fields:
             update_values.append(recipe_id)
             query = f"UPDATE recipes SET {', '.join(update_fields)} WHERE id = %s"
             cur.execute(query, update_values)
             conn.commit()
-        
+       
         cur.close()
         conn.close()
-        
+       
         return jsonify({"success": True, "message": "Recipe updated successfully!"})
-        
+       
     except Exception as e:
         print(f"Error updating recipe: {e}")
         return jsonify({"success": False, "message": "Error updating recipe"}), 500
-
+   
 @app.route('/admin/delete_recipe/<int:recipe_id>', methods=['DELETE'])
 def delete_recipe(recipe_id):
     """Delete a recipe"""
     if 'user_id' not in session:
         return jsonify({"success": False, "message": "Not logged in"}), 401
-    
+   
     try:
+        user_id = session['user_id']  # ADD THIS LINE
         conn = mysql.connector.connect(**db_cognifit)
-        cur = conn.cursor()
-        
+        cur = conn.cursor(dictionary=True)  # Change to dictionary=True
+       
+        # First, check if the current user owns this recipe
+        cur.execute("SELECT user_id FROM recipes WHERE id = %s", (recipe_id,))
+        recipe = cur.fetchone()
+       
+        if not recipe:
+            return jsonify({"success": False, "message": "Recipe not found"}), 404
+       
+        # Convert both to integers for proper comparison
+        recipe_user_id = int(recipe['user_id']) if recipe['user_id'] is not None else 0
+        session_user_id = int(user_id)
+       
+        # Check ownership - only allow if user owns the recipe
+        if recipe_user_id != session_user_id:
+            return jsonify({"success": False, "message": "You can only delete your own recipes"}), 403
+       
         cur.execute("DELETE FROM recipes WHERE id = %s", (recipe_id,))
         conn.commit()
-        
+       
         cur.close()
         conn.close()
-        
+       
         return jsonify({"success": True, "message": "Recipe deleted successfully!"})
-        
+       
     except Exception as e:
         print(f"Error deleting recipe: {e}")
         return jsonify({"success": False, "message": "Error deleting recipe"}), 500
@@ -1503,160 +1527,176 @@ def change_password():
 # -------------------------
 # Calendar Route
 # -------------------------
+# -------------------------
+# Calendar Route
+# -------------------------
 @app.route('/calendar')
 def calendar():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     return render_template('calendar.html', user_name=session.get('username'))
-
+ 
 # -------------------------
 # Calendar Notes Routes
 # -------------------------
-
+ 
 @app.route('/get_calendar_notes', methods=['GET'])
 def get_calendar_notes():
     """Get all notes for the logged-in user"""
     if 'user_id' not in session:
         return jsonify({"success": False, "message": "Not logged in"}), 401
-    
+   
     user_id = session['user_id']
-    
+   
     try:
         conn = mysql.connector.connect(**db_cognifit)
         cur = conn.cursor(dictionary=True)
-        
+       
         cur.execute("""
-            SELECT note_date, note_content, created_at 
-            FROM calendar_notes 
-            WHERE user_id = %s 
+            SELECT note_date, note_content, created_at
+            FROM calendar_notes
+            WHERE user_id = %s
             ORDER BY note_date DESC, created_at DESC
         """, (user_id,))
-        
+       
         notes = cur.fetchall()
         cur.close()
         conn.close()
-        
+       
         # Format the notes for the frontend
         notes_dict = {}
         for note in notes:
             date_str = note['note_date'].strftime('%Y-%m-%d')
             if date_str not in notes_dict:
                 notes_dict[date_str] = []
-            
+           
             notes_dict[date_str].append({
                 'content': note['note_content'],
                 'timestamp': note['created_at'].isoformat()
             })
-        
+       
         return jsonify({"success": True, "notes": notes_dict})
-        
+       
     except Exception as e:
         print(f"Error fetching calendar notes: {e}")
         return jsonify({"success": False, "message": "Error fetching notes"}), 500
-
+ 
+@app.route('/get_upcoming_notes')
+def get_upcoming_notes():
+    """Get upcoming notes for notifications"""
+    if 'user_id' not in session:
+        return jsonify({"success": False, "message": "Not logged in"}), 401
+   
+    try:
+        user_id = session['user_id']
+        conn = mysql.connector.connect(**db_cognifit)
+        cur = conn.cursor(dictionary=True)
+       
+        # Get today's date and next 7 days
+        today = datetime.now().date()
+        next_week = today + timedelta(days=7)
+       
+        cur.execute("""
+            SELECT note_date, note_content, created_at
+            FROM calendar_notes
+            WHERE user_id = %s AND note_date BETWEEN %s AND %s
+            ORDER BY note_date ASC, created_at ASC
+        """, (user_id, today, next_week))
+       
+        upcoming_notes = cur.fetchall()
+       
+        cur.close()
+        conn.close()
+       
+        # Format the data
+        notes_by_date = {}
+        for note in upcoming_notes:
+            date_str = note['note_date'].strftime('%Y-%m-%d')
+            if date_str not in notes_by_date:
+                notes_by_date[date_str] = []
+            notes_by_date[date_str].append({
+                'content': note['note_content'],
+                'timestamp': note['created_at'].isoformat() if note['created_at'] else None
+            })
+       
+        return jsonify({
+            "success": True,
+            "upcoming_notes": notes_by_date,
+            "today": today.strftime('%Y-%m-%d')
+        })
+       
+    except Exception as e:
+        print(f"Error fetching upcoming notes: {e}")
+        return jsonify({"success": False, "message": "Error fetching upcoming notes"}), 500
+ 
 @app.route('/save_calendar_note', methods=['POST'])
 def save_calendar_note():
     """Save a new calendar note"""
     if 'user_id' not in session:
         return jsonify({"success": False, "message": "Not logged in"}), 401
-    
+   
     user_id = session['user_id']
     data = request.get_json()
-    
+   
     if not data or 'date' not in data or 'content' not in data:
         return jsonify({"success": False, "message": "Missing required fields"}), 400
-    
+   
     note_date = data['date']
     note_content = data['content'].strip()
-    
+   
     if not note_content:
         return jsonify({"success": False, "message": "Note content cannot be empty"}), 400
-    
+   
     try:
         conn = mysql.connector.connect(**db_cognifit)
         cur = conn.cursor()
-        
-        # Insert the note
+       
+        # Insert the note with user_id
         cur.execute("""
             INSERT INTO calendar_notes (user_id, note_date, note_content)
             VALUES (%s, %s, %s)
         """, (user_id, note_date, note_content))
-        
+       
         conn.commit()
         note_id = cur.lastrowid
-        
+       
         # Get the created timestamp
         cur.execute("SELECT created_at FROM calendar_notes WHERE id = %s", (note_id,))
         created_at = cur.fetchone()[0]
-        
+       
         cur.close()
         conn.close()
-        
+       
         return jsonify({
-            "success": True, 
+            "success": True,
             "message": "Note saved successfully!",
             "timestamp": created_at.isoformat()
         })
-        
+       
     except Exception as e:
         print(f"Error saving calendar note: {e}")
         return jsonify({"success": False, "message": "Error saving note"}), 500
-
-@app.route('/delete_calendar_notes', methods=['POST'])
-def delete_calendar_notes():
-    """Delete all notes for a specific date"""
-    if 'user_id' not in session:
-        return jsonify({"success": False, "message": "Not logged in"}), 401
-    
-    user_id = session['user_id']
-    data = request.get_json()
-    
-    if not data or 'date' not in data:
-        return jsonify({"success": False, "message": "Missing date parameter"}), 400
-    
-    note_date = data['date']
-    
-    try:
-        conn = mysql.connector.connect(**db_cognifit)
-        cur = conn.cursor()
-        
-        cur.execute("""
-            DELETE FROM calendar_notes 
-            WHERE user_id = %s AND note_date = %s
-        """, (user_id, note_date))
-        
-        conn.commit()
-        deleted_count = cur.rowcount
-        cur.close()
-        conn.close()
-        
-        return jsonify({
-            "success": True, 
-            "message": f"Deleted {deleted_count} notes",
-            "deleted_count": deleted_count
-        })
-        
-    except Exception as e:
-        print(f"Error deleting calendar notes: {e}")
-        return jsonify({"success": False, "message": "Error deleting notes"}), 500
-
+# -------------------------
+# 
+# Blog Routes
+# -------------------------
 # -------------------------
 # Blog Routes
 # -------------------------
-
+ 
 @app.route('/get_blog/<int:blog_id>')
 def get_blog(blog_id):
     """Get single blog for modal"""
     try:
         conn = mysql.connector.connect(**db_cognifit)
         cur = conn.cursor(dictionary=True)
-        
-        cur.execute("SELECT * FROM blogs WHERE id = %s AND status = 'published'", (blog_id,))
+       
+        cur.execute("SELECT * FROM blogs WHERE id = %s", (blog_id,))  # Remove the status filter
         blog = cur.fetchone()
-        
+       
         cur.close()
         conn.close()
-        
+       
         if blog:
             return jsonify({
                 "success": True,
@@ -1669,35 +1709,38 @@ def get_blog(blog_id):
                     "author": blog['author'],
                     "read_time": blog['read_time'],
                     "image_url": blog['image_url'],
+                    "is_featured": blog['is_featured'],
+                    "status": blog['status'],
+                    "user_id": blog['user_id'],  # ADD THIS LINE
                     "created_at": blog['created_at'].strftime('%b %d, %Y') if blog['created_at'] else ''
                 }
             })
         else:
             return jsonify({"success": False, "message": "Blog not found"}), 404
-            
+           
     except Exception as e:
         print(f"Error fetching blog: {e}")
         return jsonify({"success": False, "message": "Error fetching blog"}), 500
-
+ 
 @app.route('/admin/blogs')
 def admin_blogs():
     """Admin panel for managing blogs"""
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+   
     # Check if user is admin (you might want to add an admin field to your users table)
     # For now, we'll allow any logged-in user to access
     return render_template('admin_blogs.html', user_name=session.get('username'))
-
+ 
 @app.route('/admin/create_blog', methods=['POST'])
 def create_blog():
     """Create a new blog"""
     if 'user_id' not in session:
         return jsonify({"success": False, "message": "Not logged in"}), 401
-    
+   
     try:
         data = request.get_json()
-        
+       
         title = data.get('title')
         content = data.get('content')
         excerpt = data.get('excerpt', '')
@@ -1708,85 +1751,79 @@ def create_blog():
         image_url = data.get('image_url', '')
         is_featured = data.get('is_featured', False)
         status = data.get('status', 'published')
-        
+        user_id = session['user_id']  # Get the current user's ID
+       
         # Validate required fields
         if not all([title, content, category, author, read_time]):
             return jsonify({"success": False, "message": "Missing required fields"}), 400
-        
+       
         conn = mysql.connector.connect(**db_cognifit)
         cur = conn.cursor()
-        
+       
         # If setting as featured, unfeature other blogs
         if is_featured:
             cur.execute("UPDATE blogs SET is_featured = FALSE WHERE is_featured = TRUE")
-        
-        # Insert new blog
+       
+        # Insert new blog WITH user_id
         cur.execute("""
-            INSERT INTO blogs (title, content, excerpt, category, category_color, author, read_time, image_url, is_featured, status)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, (title, content, excerpt, category, category_color, author, read_time, image_url, is_featured, status))
-        
+            INSERT INTO blogs (title, content, excerpt, category, category_color, author, read_time, image_url, is_featured, status, user_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (title, content, excerpt, category, category_color, author, read_time, image_url, is_featured, status, user_id))
+       
         conn.commit()
         blog_id = cur.lastrowid
-        
+       
         cur.close()
         conn.close()
-        
+       
         return jsonify({
-            "success": True, 
+            "success": True,
             "message": "Blog created successfully!",
             "blog_id": blog_id
         })
-        
+       
     except Exception as e:
         print(f"Error creating blog: {e}")
         return jsonify({"success": False, "message": "Error creating blog"}), 500
-
-@app.route('/admin/get_blogs')
-def admin_get_blogs():
-    """Get all blogs for admin panel"""
-    if 'user_id' not in session:
-        return jsonify({"success": False, "message": "Not logged in"}), 401
-    
-    try:
-        conn = mysql.connector.connect(**db_cognifit)
-        cur = conn.cursor(dictionary=True)
-        
-        cur.execute("SELECT * FROM blogs ORDER BY created_at DESC")
-        blogs = cur.fetchall()
-        
-        cur.close()
-        conn.close()
-        
-        # Convert datetime objects to strings
-        for blog in blogs:
-            if blog['created_at']:
-                blog['created_at'] = blog['created_at'].strftime('%Y-%m-%d %H:%M:%S')
-            if blog['updated_at']:
-                blog['updated_at'] = blog['updated_at'].strftime('%Y-%m-%d %H:%M:%S')
-        
-        return jsonify({"success": True, "blogs": blogs})
-        
-    except Exception as e:
-        print(f"Error fetching blogs: {e}")
-        return jsonify({"success": False, "message": "Error fetching blogs"}), 500
-
+ 
 @app.route('/admin/update_blog/<int:blog_id>', methods=['POST'])
 def update_blog(blog_id):
     """Update a blog"""
     if 'user_id' not in session:
         return jsonify({"success": False, "message": "Not logged in"}), 401
-    
+   
     try:
         data = request.get_json()
-        
+        user_id = session['user_id']
+       
         conn = mysql.connector.connect(**db_cognifit)
-        cur = conn.cursor()
-        
+        cur = conn.cursor(dictionary=True)
+       
+        # First, check if the current user owns this blog
+        cur.execute("SELECT user_id FROM blogs WHERE id = %s", (blog_id,))
+        blog = cur.fetchone()
+       
+        if not blog:
+            return jsonify({"success": False, "message": "Blog not found"}), 404
+       
+        # Convert both to integers for proper comparison
+        blog_user_id = int(blog['user_id']) if blog['user_id'] is not None else 0
+        session_user_id = int(user_id)
+       
+        print(f"DEBUG: Blog user_id: {blog_user_id} (type: {type(blog_user_id)})")
+        print(f"DEBUG: Session user_id: {session_user_id} (type: {type(session_user_id)})")
+        print(f"DEBUG: Match: {blog_user_id == session_user_id}")
+       
+        # Check ownership - only allow if user owns the blog
+        if blog_user_id != session_user_id:
+            return jsonify({"success": False, "message": "You can only edit your own blogs"}), 403
+       
+        # Rest of your update code...
+       
         # Build dynamic update query
         update_fields = []
         update_values = []
-        
+       
         if 'title' in data:
             update_fields.append("title = %s")
             update_values.append(data['title'])
@@ -1820,44 +1857,84 @@ def update_blog(blog_id):
         if 'status' in data:
             update_fields.append("status = %s")
             update_values.append(data['status'])
-        
+       
         if update_fields:
             update_values.append(blog_id)
             query = f"UPDATE blogs SET {', '.join(update_fields)} WHERE id = %s"
             cur.execute(query, update_values)
             conn.commit()
-        
+       
         cur.close()
         conn.close()
-        
+       
         return jsonify({"success": True, "message": "Blog updated successfully!"})
-        
+       
     except Exception as e:
         print(f"Error updating blog: {e}")
         return jsonify({"success": False, "message": "Error updating blog"}), 500
-
+ 
 @app.route('/admin/delete_blog/<int:blog_id>', methods=['DELETE'])
 def delete_blog(blog_id):
     """Delete a blog"""
     if 'user_id' not in session:
         return jsonify({"success": False, "message": "Not logged in"}), 401
-    
+   
     try:
+        user_id = session['user_id']
         conn = mysql.connector.connect(**db_cognifit)
         cur = conn.cursor()
-        
+       
+        # First, check if the current user owns this blog
+        cur.execute("SELECT user_id FROM blogs WHERE id = %s", (blog_id,))
+        blog = cur.fetchone()
+       
+        if not blog:
+            return jsonify({"success": False, "message": "Blog not found"}), 404
+       
+        # Check ownership - only allow if user owns the blog
+        if blog[0] != user_id:
+            return jsonify({"success": False, "message": "You can only delete your own blogs"}), 403
+       
         cur.execute("DELETE FROM blogs WHERE id = %s", (blog_id,))
         conn.commit()
-        
+       
         cur.close()
         conn.close()
-        
+       
         return jsonify({"success": True, "message": "Blog deleted successfully!"})
-        
+       
     except Exception as e:
         print(f"Error deleting blog: {e}")
         return jsonify({"success": False, "message": "Error deleting blog"}), 500
-
+@app.route('/admin/get_blogs')
+def admin_get_blogs():
+    """Get all blogs for admin panel"""
+    if 'user_id' not in session:
+        return jsonify({"success": False, "message": "Not logged in"}), 401
+   
+    try:
+        conn = mysql.connector.connect(**db_cognifit)
+        cur = conn.cursor(dictionary=True)
+       
+        # Make sure this query includes user_id
+        cur.execute("SELECT *, COALESCE(user_id, 0) as user_id FROM blogs ORDER BY created_at DESC")
+        blogs = cur.fetchall()
+       
+        cur.close()
+        conn.close()
+       
+        # Convert datetime objects to strings
+        for blog in blogs:
+            if blog['created_at']:
+                blog['created_at'] = blog['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+            if blog['updated_at']:
+                blog['updated_at'] = blog['updated_at'].strftime('%Y-%m-%d %H:%M:%S')
+       
+        return jsonify({"success": True, "blogs": blogs})
+       
+    except Exception as e:
+        print(f"Error fetching blogs: {e}")
+        return jsonify({"success": False, "message": "Error fetching blogs"}), 50
 # -------------------------
 # Workout Routes
 # -------------------------
@@ -1987,18 +2064,19 @@ def delete_workout(workout_id):
         return jsonify({"success": False, "message": "Error deleting workout"}), 500
 
 @app.route('/api/workouts/stats', methods=['GET'])
-def get_workout_stats():
+def workout_stats_api():
     """Get workout statistics for the logged-in user"""
     if 'user_id' not in session:
         return jsonify({"success": False, "message": "Not logged in"}), 401
     
     user_id = session['user_id']
-    stats = get_workout_stats(user_id)
+    stats = get_workout_stats(user_id)  # Calls your helper function correctly
     
     return jsonify({
         "success": True,
         "stats": stats
     })
+
 
 # -------------------------
 # Menstrual Cycle Tracking - FIXED ROUTES
@@ -2072,6 +2150,93 @@ def logout():
     session.pop('user_id', None)
     session.pop('user_email', None)
     return redirect(url_for('login'))
+
+# ✅ Workout Progress Summary API
+@app.route('/api/progress/summary')
+def progress_summary():
+    conn = None  # ✅ initialize conn so 'finally' won't crash
+
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({"success": False, "message": "User not logged in"}), 401
+
+        # ✅ Handle the "all" option safely
+        range_param = request.args.get('range', '7')
+        if range_param == 'all':
+            range_days = None  # means no filter
+        else:
+            range_days = int(range_param)
+
+        conn = mysql.connector.connect(
+            host='localhost',
+            user='root',
+            password='',
+            database='cognifit'
+        )
+        cursor = conn.cursor(dictionary=True)
+
+        if range_days:
+            start_date = datetime.now() - timedelta(days=range_days)
+            cursor.execute("""
+                SELECT DATE(workout_date) AS workout_date,
+                       SUM(duration_minutes) AS duration_minutes,
+                       SUM(calories_burned) AS calories_burned
+                FROM workouts
+                WHERE user_id = %s AND workout_date >= %s
+                GROUP BY DATE(workout_date)
+                ORDER BY DATE(workout_date)
+            """, (user_id, start_date))
+        else:
+            # "All Time" – no date filter
+            cursor.execute("""
+                SELECT DATE(workout_date) AS workout_date,
+                       SUM(duration_minutes) AS duration_minutes,
+                       SUM(calories_burned) AS calories_burned
+                FROM workouts
+                WHERE user_id = %s
+                GROUP BY DATE(workout_date)
+                ORDER BY DATE(workout_date)
+            """, (user_id,))
+
+        workout_data = cursor.fetchall()
+
+        # Frequency data
+        if range_days:
+            cursor.execute("""
+                SELECT DATE(workout_date) AS period, COUNT(*) AS workout_count
+                FROM workouts
+                WHERE user_id = %s AND workout_date >= %s
+                GROUP BY DATE(workout_date)
+                ORDER BY DATE(workout_date)
+            """, (user_id, start_date))
+        else:
+            cursor.execute("""
+                SELECT DATE(workout_date) AS period, COUNT(*) AS workout_count
+                FROM workouts
+                WHERE user_id = %s
+                GROUP BY DATE(workout_date)
+                ORDER BY DATE(workout_date)
+            """, (user_id,))
+
+        frequency_data = cursor.fetchall()
+
+        return jsonify({
+            "success": True,
+            "chart_data": {
+                "workout_data": workout_data,
+                "frequency_data": frequency_data
+            }
+        })
+
+    except Exception as e:
+        print("Error in /api/progress/summary:", e)
+        return jsonify({"success": False, "message": str(e)})
+
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
 
 # -------------------------
 # Run the app

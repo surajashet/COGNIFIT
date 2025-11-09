@@ -941,8 +941,8 @@
 
             // Update displayed values
             document.getElementById("predictedFood").textContent = foodName;
-            document.getElementById("foodDetails").textContent =
-                `${quantity} ${unit} ≈ ${grams.toFixed(1)}g`;
+            document.getElementById("foodDetails").textContent = "";
+
 
             document.getElementById("calories").textContent = nutrition.calories
                 ? nutrition.calories.toFixed(2)

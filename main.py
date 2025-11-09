@@ -249,6 +249,7 @@ async def get_meals(user_id: int, log_date: str):
     logs = get_logs_by_user_and_date(user_id, log_date)
     return {"logs": logs}
 
+
 # -------------------------
 # Run the application (for standalone testing)
 # -------------------------
