@@ -10,6 +10,15 @@ import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import StandardScaler
 import os
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, make_response
+
+
+import pdfkit
+
+PDFKIT_CONFIG = pdfkit.configuration(
+    wkhtmltopdf=r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
+)
+
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"  # Needed for login sessions
@@ -717,6 +726,35 @@ def food_progress(user_id):
         if conn and conn.is_connected():
             cursor.close()
             conn.close()
+
+
+@app.route('/report')
+def overall_report():
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
+
+    conn = mysql.connector.connect(**db_cognifit)
+    cur = conn.cursor(dictionary=True)
+
+    # Example queries
+    cur.execute("SELECT COUNT(*) AS total_workouts, AVG(duration) AS avg_duration FROM workouts WHERE user_id=%s", (user_id,))
+    workout_stats = cur.fetchone()
+
+    cur.execute("SELECT AVG(calories) AS avg_calories, AVG(protein) AS avg_protein FROM food_log WHERE user_id=%s", (user_id,))
+    nutrition_stats = cur.fetchone()
+
+    cur.execute("SELECT * FROM progress WHERE user_id=%s ORDER BY date DESC LIMIT 1", (user_id,))
+    progress = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    return render_template('report.html',
+                           workout=workout_stats,
+                           nutrition=nutrition_stats,
+                           progress=progress)
+
 
 
 # -------------------------
@@ -2237,6 +2275,152 @@ def progress_summary():
         if conn and conn.is_connected():
             cursor.close()
             conn.close()
+
+from datetime import date
+# ... other imports
+
+@app.context_processor
+def inject_today_date():
+    return {'current_date': date.today().isoformat()}
+
+# -------------------------
+#  OVERALL REPORT ROOT 
+
+@app.context_processor
+def inject_today_date():
+    """Make current date available to templates for <input type='date' max>"""
+    return {'current_date': date.today().isoformat()}
+
+
+@app.route('/report/download')
+def download_report():
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
+
+    # 1️⃣ Get dates from form
+    start_date_str = request.args.get('start_date')
+    end_date_str = request.args.get('end_date')
+
+    # 2️⃣ Validate format
+    try:
+        start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+        end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+    except Exception:
+        flash("Invalid date format. Please choose valid dates.", "error")
+        return redirect(url_for('progress'))
+
+    # 3️⃣ Logical checks
+    today = date.today()
+    if start_date > end_date:
+        flash("Start date cannot be after end date.", "warning")
+        return redirect(url_for('progress'))
+    if start_date > today or end_date > today:
+        flash("Dates cannot be in the future.", "warning")
+        return redirect(url_for('progress'))
+    if (end_date - start_date).days > 365:
+        flash("Please select a date range of at most 365 days.", "warning")
+        return redirect(url_for('progress'))
+
+    # 4️⃣ Fetch data from DB
+    conn = mysql.connector.connect(**db_cognifit)
+    cur = conn.cursor(dictionary=True)
+
+    # --- Workout summary ---
+    cur.execute("""
+        SELECT 
+            COUNT(*) AS total_workouts,
+            AVG(duration_minutes) AS avg_duration,
+            SUM(calories_burned) AS total_calories
+        FROM workouts
+        WHERE user_id = %s AND workout_date BETWEEN %s AND %s
+    """, (user_id, start_date_str, end_date_str))
+    workout = cur.fetchone() or {'total_workouts': 0, 'avg_duration': 0, 'total_calories': 0}
+
+    # --- Nutrition summary ---
+    cur.execute("""
+        SELECT 
+            AVG(calories) AS avg_calories,
+            AVG(protein) AS avg_protein,
+            AVG(carbs) AS avg_carbs,
+            AVG(fat) AS avg_fats,
+            COUNT(*) AS entries_count
+        FROM food_log
+        WHERE user_id = %s AND DATE(log_date) BETWEEN %s AND %s
+    """, (user_id, start_date_str, end_date_str))
+    nutrition = cur.fetchone() or {'avg_calories': None, 'avg_protein': None, 'avg_carbs': None, 'avg_fats': None, 'entries_count': 0}
+
+    # --- Latest user info ---
+    cur.execute("""
+        SELECT goals, activity_level, height, weight
+        FROM user_onboarding
+        WHERE user_id = %s
+        ORDER BY updated_at DESC LIMIT 1
+    """, (user_id,))
+    user = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    # 5️⃣ Compute BMI
+    bmi = None
+    if user and user.get('height') and user.get('weight'):
+        try:
+            h_m = float(user['height']) / 100.0
+            bmi = round(float(user['weight']) / (h_m * h_m), 2)
+        except Exception:
+            bmi = None
+
+    # 6️⃣ Check if data exists
+    no_data = (workout.get('total_workouts', 0) == 0 and nutrition.get('entries_count', 0) == 0)
+    notice = "No workout or food log data found for the selected date range." if no_data else None
+
+    # 7️⃣ AI Suggestions (simple rules)
+    ai_suggestions = []
+    if workout['total_workouts'] >= 4:
+        ai_suggestions.append("🔥 Great job staying consistent with your workouts!")
+    elif workout['total_workouts'] > 0:
+        ai_suggestions.append("💪 Keep pushing — try to increase your weekly workout count!")
+    else:
+        ai_suggestions.append("🏋️ No workouts logged in this period — let's get moving!")
+
+    if nutrition['avg_calories']:
+        if nutrition['avg_calories'] > 2500:
+            ai_suggestions.append("⚠️ Your calorie intake is high — balance it with more activity or lighter meals.")
+        elif nutrition['avg_calories'] < 1500:
+            ai_suggestions.append("🍽️ Your calorie intake seems low — ensure you're getting enough nutrients.")
+        else:
+            ai_suggestions.append("✅ Your calorie intake looks balanced — great job!")
+
+    if bmi:
+        if bmi > 25:
+            ai_suggestions.append("🏃 You're above a healthy BMI — consider more cardio or adjusting calorie intake.")
+        elif bmi < 18.5:
+            ai_suggestions.append("🍔 You're below a healthy BMI — focus on increasing nutritious calorie intake.")
+        else:
+            ai_suggestions.append("💯 You're maintaining a healthy BMI — keep it up!")
+
+    # 8️⃣ Render and generate PDF
+    rendered = render_template(
+        'report.html',
+        workout=workout,
+        nutrition=nutrition,
+        user=user,
+        bmi=bmi,
+        start_date=start_date_str,
+        end_date=end_date_str,
+        notice=notice,
+        ai_suggestions=ai_suggestions
+    )
+
+    pdf = pdfkit.from_string(rendered, False, configuration=PDFKIT_CONFIG)
+    response = make_response(pdf)
+    response.headers['Content-Type'] = 'application/pdf'
+    filename = f"cognifit_report_{start_date_str}_to_{end_date_str}.pdf"
+    response.headers['Content-Disposition'] = f'attachment; filename={filename}'
+    return response
+
+
+
 
 # -------------------------
 # Run the app

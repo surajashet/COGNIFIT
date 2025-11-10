@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Cognifit - Overall Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Noto+Color+Emoji&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', 'Noto Color Emoji', sans-serif;
+            margin: 40px;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #2b5876;
+            border-bottom: 3px solid #eaeaea;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #2b5876;
+            margin-top: 30px;
+        }
+        .suggestion {
+            background: #f0f7ff;
+            border-left: 4px solid #2b5876;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+
+<body>
+   
+<h1> Cognifit Overall Report</h1>
+
+  <p style="font-size:0.95rem; color:#555;">
+    Report period:
+    {% if start_date and end_date %}
+      <strong>{{ start_date }}</strong> to <strong>{{ end_date }}</strong>
+    {% else %}
+      <strong>All time</strong>
+    {% endif %}
+  </p>
+
+  {% if notice %}
+    <div style="background:#fff3cd;border-left:4px solid #ffecb5;padding:10px;margin-bottom:14px;">
+      {{ notice }}
+    </div>
+  {% endif %}
+
+    <div class="section">
+        <h2> Workout Summary</h2>
+        <ul>
+            <li>Total Workouts: {{ workout.total_workouts or 0 }}</li>
+            <li>Average Duration: {{ "%.1f"|format(workout.avg_duration or 0) }} mins</li>
+            <li>Total Calories Burned: {{ workout.total_calories or 0 }} kcal</li>
+        </ul>
+    </div>
+
+    <div class="section">
+    <h2> Nutrition Summary</h2>
+    <ul>
+        <li>Average Calories: {{ "%.1f"|format(nutrition.avg_calories or 0) }} kcal</li>
+        <li>Average Protein: {{ "%.1f"|format(nutrition.avg_protein or 0) }} g</li>
+        <li>Average Carbs: {{ "%.1f"|format(nutrition.avg_carbs or 0) }} g</li>
+        <li>Average Fats: {{ "%.1f"|format(nutrition.avg_fats or 0) }} g</li>
+    </ul>
+</div>
+
+
+    <div class="section">
+        <h2> Progress Insights</h2>
+        <ul>
+            <li>Goal: {{ user.goals if user else 'N/A' }}</li>
+            <li>Activity Level: {{ user.activity_level if user else 'N/A' }}</li>
+            <li>Weight: {{ user.weight if user else 'N/A' }} kg</li>
+            <li>Height: {{ user.height if user else 'N/A' }} cm</li>
+            <li>BMI: {{ bmi if bmi else 'N/A' }}</li>
+        </ul>
+    </div>
+
+   <div class="section">
+    <h2>AI Suggestions</h2>
+    {% if ai_suggestions %}
+        {% for s in ai_suggestions %}
+            <div class="suggestion">{{ s }}</div>
+        {% endfor %}
+    {% else %}
+        <p style="color:#777;">No AI suggestions available for this report.</p>
+    {% endif %}
+</div>
+
+</body>
+</html>

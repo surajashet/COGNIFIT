@@ -8,6 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 </head>
 
 <body>
@@ -41,6 +43,10 @@
                 <i class="fas fa-dumbbell"></i>
                 <span>Workout</span>
             </a>
+            <a href="{{ url_for('snap') }}" class="nav-item {% if request.path == url_for('snap') %}active{% endif %}">
+    <i class="fas fa-camera"></i>
+    <span>Snap</span>
+</a>
             <a href="{{ url_for('progress') }}" class="nav-item {% if request.path == '/progress' %}active{% endif %}">
                 <i class="fas fa-chart-line"></i>
                 <span>Progress</span>
@@ -61,11 +67,7 @@
                 <i class="fas fa-calendar-alt"></i>
                 <span>Calendar</span>
             </a>
-           <a href="{{ url_for('snap') }}" class="nav-item {% if request.path == url_for('snap') %}active{% endif %}">
-    <i class="fas fa-camera"></i>
-    <span>Snap</span>
-</a>
-
+        
             <a href="{{ url_for('settings') }}" class="nav-item {% if request.path == url_for('settings') %}active{% endif %}">
                 <i class="fas fa-cog"></i>
                 <span>Settings</span>
@@ -90,7 +92,7 @@
                 </div>
             </div>
 
-            <!-- Time Range Filter -->
+            <!-- Time Range Filter with Download Report Section -->
             <div class="time-filter-section">
                 <div class="time-filter-card">
                     <div class="filter-header">
@@ -105,6 +107,46 @@
                             <button class="btn-filter" data-range="365">Last Year</button>
                             <button class="btn-filter" data-range="all">All Time</button>
                         </div>
+                    </div>
+                    
+                    <!-- Enhanced Download Report Section -->
+                    <div class="download-report-section">
+                        <div class="download-header">
+                            <i class="fas fa-file-download"></i>
+                            <h4>Generate Progress Report</h4>
+                        </div>
+                        <p class="download-description">Select a date range to download your comprehensive progress report</p>
+                        
+                        <form id="reportForm" action="{{ url_for('download_report') }}" method="get">
+                            <div class="date-range-selector">
+                                <div class="date-input-container">
+                                    <label for="start_date" class="date-label">Start Date</label>
+                                    <div class="date-input-wrapper">
+                                        <input type="date" id="start_date" name="start_date"
+                                               max="{{ current_date }}" required>
+                                        <i class="fas fa-calendar-alt date-icon"></i>
+                                    </div>
+                                </div>
+                                
+                                <div class="date-separator">
+                                    <i class="fas fa-arrow-right"></i>
+                                </div>
+                                
+                                <div class="date-input-container">
+                                    <label for="end_date" class="date-label">End Date</label>
+                                    <div class="date-input-wrapper">
+                                        <input type="date" id="end_date" name="end_date"
+                                               max="{{ current_date }}" required>
+                                        <i class="fas fa-calendar-alt date-icon"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="download-report-btn">
+                                <i class="fas fa-download"></i>
+                                Download Overall Report
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -144,13 +186,12 @@
                             <canvas id="frequencyChart"></canvas>
                         </div>
                     </div>
+                    
+                    <!-- Food Intake Summary -->
                     <div class="info-card">
-    <h2 class="card-title"><i class="fas fa-utensils"></i> Food Intake Summary</h2>
-    <canvas id="foodChart"></canvas>
-</div>
-
-                 
-
+                        <h2 class="card-title"><i class="fas fa-utensils"></i> Food Intake Summary</h2>
+                        <canvas id="foodChart"></canvas>
+                    </div>
                 </div>
             </div>
         </main>
@@ -186,7 +227,7 @@
 
         .time-filter-card {
             background: var(--text-light);
-            padding: 20px;
+            padding: 25px;
             border-radius: var(--border-radius);
             box-shadow: var(--card-shadow);
             border-left: 4px solid var(--primary-color);
@@ -214,6 +255,7 @@
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
+            margin-bottom: 25px;
         }
 
         .btn-filter {
@@ -234,6 +276,129 @@
             background: var(--primary-color);
             color: white;
             border-color: var(--primary-color);
+        }
+
+        /* Enhanced Download Report Section Styles */
+        .download-report-section {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border: 1px solid #cbd5e0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .download-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .download-header i {
+            color: var(--primary-color);
+            margin-right: 10px;
+            font-size: 1.3rem;
+        }
+
+        .download-header h4 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+
+        .download-description {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .date-range-selector {
+            display: flex;
+            align-items: flex-end;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .date-input-container {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .date-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #374151;
+            font-size: 0.9rem;
+        }
+
+        .date-input-wrapper {
+            position: relative;
+        }
+
+        .date-input-wrapper input {
+            width: 100%;
+            padding: 10px 12px 10px 35px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            background-color: white;
+        }
+
+        .date-input-wrapper input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+
+        .date-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7280;
+            pointer-events: none;
+        }
+
+        .date-separator {
+            display: flex;
+            align-items: center;
+            padding-bottom: 24px;
+            color: #6b7280;
+        }
+
+        .download-report-btn {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #2b6cb0 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .download-report-btn:hover {
+            background: linear-gradient(135deg, #2b6cb0 0%, #2c5282 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .download-report-btn:active {
+            transform: translateY(0);
         }
 
         /* Progress-specific styles */
@@ -292,6 +457,16 @@
             
             .chart-container {
                 height: 300px;
+            }
+            
+            .date-range-selector {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .date-separator {
+                padding: 10px 0;
+                justify-content: center;
             }
         }
     </style>
@@ -598,6 +773,29 @@
             }
         });
     }
+
+    document.getElementById('reportForm').addEventListener('submit', function(e) {
+  const start = document.getElementById('start_date').value;
+  const end = document.getElementById('end_date').value;
+  if (!start || !end) {
+    alert('Please select both start and end dates.');
+    e.preventDefault();
+    return;
+  }
+  const s = new Date(start);
+  const en = new Date(end);
+  if (s > en) {
+    alert('End date cannot be earlier than start date.');
+    e.preventDefault();
+    return;
+  }
+  // optional: prevent future dates double-check (inputs already use max)
+  const today = new Date("{{ current_date }}");
+  if (s > today || en > today) {
+    alert('Dates cannot be in the future.');
+    e.preventDefault();
+  }
+});
 </script>
 
 </body>

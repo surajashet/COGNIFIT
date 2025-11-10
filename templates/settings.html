@@ -184,6 +184,10 @@
     <i class="fas fa-dumbbell"></i>
     <span>Workout</span>
 </a>
+        <a href="{{ url_for('snap') }}" class="nav-item {% if request.path == url_for('snap') %}active{% endif %}">
+    <i class="fas fa-camera"></i>
+    <span>Snap</span>
+</a>
 
             <a href="{{ url_for('progress') }}" class="nav-item {% if request.path == '/progress' %}active{% endif %}" >
                 <i class="fas fa-chart-line"></i>
@@ -205,10 +209,7 @@
                 <i class="fas fa-calendar-alt"></i>
                 <span>Calendar</span>
             </a>
-            <a href="{{ url_for('snap') }}" class="nav-item {% if request.path == url_for('snap') %}active{% endif %}">
-    <i class="fas fa-camera"></i>
-    <span>Snap</span>
-</a>
+    
 
             <a href="{{ url_for('settings') }}" class="nav-item {% if request.path == url_for('settings') %}active{% endif %}">
                 <i class="fas fa-cog"></i>
